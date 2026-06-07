@@ -1,40 +1,28 @@
 'use client';
 
-import { useLocale, useTranslations } from 'next-intl';
+import { useLocale } from 'next-intl';
+import { useRouter } from 'next/navigation';
 import { useTransition } from 'react';
+import { Languages } from 'lucide-react';
 import { setLocale } from '@/i18n/actions';
 
-const OPTIONS = [
-  { value: 'id-ID', labelKey: 'languageIndonesian' },
-  { value: 'en-US', labelKey: 'languageEnglish' },
-] as const;
-
-/** Language switcher — PRD §13. Available on login, profile, and settings. */
+/** Language toggle (id-ID ⇄ en-US) — icon only. Refreshes so server messages reload. */
 export function LanguageSwitcher() {
-  const t = useTranslations('settings');
   const locale = useLocale();
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
+  const next = locale === 'id-ID' ? 'en-US' : 'id-ID';
 
   return (
-    <div className="inline-flex rounded-md border border-border bg-card p-0.5" role="group" aria-label={t('language')}>
-      {OPTIONS.map((opt) => {
-        const active = locale === opt.value;
-        return (
-          <button
-            key={opt.value}
-            type="button"
-            disabled={isPending}
-            onClick={() => startTransition(() => setLocale(opt.value))}
-            className={`rounded px-3 py-1.5 text-sm font-medium transition-colors disabled:opacity-50 ${
-              active
-                ? 'bg-primary text-primary-foreground'
-                : 'text-muted-foreground hover:text-foreground'
-            }`}
-          >
-            {t(opt.labelKey)}
-          </button>
-        );
-      })}
-    </div>
+    <button
+      type="button"
+      disabled={isPending}
+      onClick={() => startTransition(async () => { await setLocale(next); router.refresh(); })}
+      title={locale === 'id-ID' ? 'Bahasa: Indonesia' : 'Language: English'}
+      className="inline-flex h-9 items-center gap-1.5 rounded-lg px-2.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground disabled:opacity-50"
+    >
+      <Languages size={18} />
+      <span className="text-xs font-bold uppercase">{locale.slice(0, 2)}</span>
+    </button>
   );
 }
