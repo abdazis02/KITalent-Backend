@@ -1,0 +1,11 @@
+{
+  "required": "{field} is required",
+  "email": "Invalid email format",
+  "minLength": "{field} must be at least {min} characters",
+  "maxLength": "{field} must be at most {max} characters",
+  "passwordPolicy": "Password must be at least 8 characters and contain uppercase, lowercase, and a number",
+  "passwordMismatch": "Password confirmation does not match",
+  "invalidDate": "Invalid date",
+  "positiveNumber": "Value must be greater than 0",
+  "tenantRequired": "Tenant is required"
+}

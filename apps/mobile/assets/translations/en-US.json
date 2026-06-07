@@ -1,0 +1,24 @@
+{
+  "common": {
+    "appName": "KITalent",
+    "save": "Save",
+    "cancel": "Cancel"
+  },
+  "auth": {
+    "signIn": "Sign In",
+    "email": "Email",
+    "password": "Password",
+    "signInTitle": "Sign in to KITalent"
+  },
+  "attendance": {
+    "checkIn": "Check In",
+    "checkOut": "Check Out"
+  },
+  "settings": {
+    "appearance": "Appearance",
+    "themeSystem": "Follow System",
+    "themeLight": "Light Mode",
+    "themeDark": "Dark Mode",
+    "language": "Language"
+  }
+}

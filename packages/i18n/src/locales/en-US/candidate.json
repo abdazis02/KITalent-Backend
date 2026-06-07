@@ -1,0 +1,23 @@
+{
+  "title": "Candidate",
+  "source": "Source",
+  "cv": "CV",
+  "move": "Move Stage",
+  "convert": "Convert to Employee",
+  "blacklist": "Blacklist",
+  "stage": {
+    "applied": "Applied",
+    "screening": "Screening",
+    "shortlisted": "Shortlisted",
+    "interview_scheduled": "Interview Scheduled",
+    "interviewed": "Interviewed",
+    "assessment": "Assessment",
+    "mcu": "Medical Check-up",
+    "background_check": "Background Check",
+    "offering": "Offering",
+    "accepted": "Accepted",
+    "rejected": "Rejected",
+    "onboarding": "Onboarding",
+    "hired": "Hired"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Reimbursement",
+  "category": "Category",
+  "amount": "Amount",
+  "receipt": "Receipt",
+  "pay": "Pay",
+  "status": {
+    "submitted": "Submitted",
+    "waiting_approval": "Waiting Approval",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "paid": "Paid",
+    "cancelled": "Cancelled"
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "title": "Assets & Uniforms",
+  "code": "Asset Code",
+  "category": "Category",
+  "serialNumber": "Serial Number",
+  "assign": "Assign",
+  "return": "Return",
+  "history": "History",
+  "condition": {
+    "good": "Good",
+    "damaged": "Damaged",
+    "lost": "Lost"
+  },
+  "status": {
+    "available": "Available",
+    "assigned": "Assigned",
+    "returned": "Returned",
+    "damaged": "Damaged",
+    "lost": "Lost",
+    "retired": "Retired"
+  }
+}

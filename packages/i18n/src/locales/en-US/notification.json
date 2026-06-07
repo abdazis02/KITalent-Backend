@@ -1,0 +1,11 @@
+{
+  "title": "Notifications",
+  "markRead": "Mark as Read",
+  "markAllRead": "Mark All as Read",
+  "unread": "Unread",
+  "empty": "No notifications yet",
+  "events": {
+    "leave.approved": "Leave request approved",
+    "leave.rejected": "Leave request rejected"
+  }
+}

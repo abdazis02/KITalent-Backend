@@ -1,0 +1,23 @@
+{
+  "title": "Payroll",
+  "run": "Run Payroll",
+  "period": "Period",
+  "basicSalary": "Basic Salary",
+  "totalEarning": "Total Earning",
+  "totalDeduction": "Total Deduction",
+  "netSalary": "Net Salary",
+  "component": "Component",
+  "salarySlip": "Salary Slip",
+  "approve": "Approve Payroll",
+  "lock": "Lock Payroll",
+  "status": {
+    "draft": "Draft",
+    "calculating": "Calculating",
+    "need_review": "Need Review",
+    "waiting_approval": "Waiting Approval",
+    "approved": "Approved",
+    "paid": "Paid",
+    "locked": "Locked",
+    "cancelled": "Cancelled"
+  }
+}

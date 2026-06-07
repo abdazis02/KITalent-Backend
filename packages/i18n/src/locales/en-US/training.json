@@ -1,0 +1,22 @@
+{
+  "title": "Training",
+  "trainer": "Trainer",
+  "schedule": "Schedule",
+  "enroll": "Enroll",
+  "certificate": "Certificate",
+  "certificateExpiry": "Certificate Expiry",
+  "expiringCerts": "Expiring Certifications",
+  "status": {
+    "planned": "Planned",
+    "ongoing": "Ongoing",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  },
+  "enrollment": {
+    "enrolled": "Enrolled",
+    "attended": "Attended",
+    "passed": "Passed",
+    "failed": "Failed",
+    "no_show": "No Show"
+  }
+}

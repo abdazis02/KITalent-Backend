@@ -1,0 +1,11 @@
+{
+  "required": "{field} wajib diisi",
+  "email": "Format email tidak valid",
+  "minLength": "{field} minimal {min} karakter",
+  "maxLength": "{field} maksimal {max} karakter",
+  "passwordPolicy": "Kata sandi harus minimal 8 karakter, mengandung huruf besar, huruf kecil, dan angka",
+  "passwordMismatch": "Konfirmasi kata sandi tidak cocok",
+  "invalidDate": "Tanggal tidak valid",
+  "positiveNumber": "Nilai harus lebih besar dari 0",
+  "tenantRequired": "Tenant wajib dipilih"
+}

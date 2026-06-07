@@ -1,0 +1,54 @@
+# Local development infrastructure for KITalent.
+# Brings up PostgreSQL, Redis, and MinIO. App containers live in
+# docker-compose.prod.yml (see infra/docker/*.Dockerfile).
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: kitalent-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kitalent
+      POSTGRES_PASSWORD: kitalent
+      POSTGRES_DB: kitalent
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.docker-data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kitalent"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: kitalent-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./.docker-data/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  minio:
+    image: minio/minio:latest
+    container_name: kitalent-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: kitalent
+      MINIO_ROOT_PASSWORD: kitalent-secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - ./.docker-data/minio:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 5s
+      retries: 5

@@ -1,0 +1,11 @@
+{
+  "title": "Jadwal & Shift",
+  "shift": "Shift",
+  "shiftName": "Nama Shift",
+  "startTime": "Jam Masuk",
+  "endTime": "Jam Pulang",
+  "breakTime": "Jam Istirahat",
+  "lateTolerance": "Toleransi Keterlambatan",
+  "overnight": "Lintas Hari",
+  "roster": "Roster"
+}

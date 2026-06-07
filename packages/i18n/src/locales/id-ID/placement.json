@@ -1,0 +1,19 @@
+{
+  "title": "Penempatan",
+  "position": "Posisi",
+  "location": "Lokasi",
+  "supervisor": "Supervisor",
+  "activate": "Aktifkan",
+  "complete": "Selesaikan",
+  "requestReplacement": "Minta Pengganti",
+  "status": {
+    "draft": "Draf",
+    "waiting_approval": "Menunggu Persetujuan",
+    "active": "Aktif",
+    "on_hold": "Ditahan",
+    "replacement_requested": "Permintaan Pengganti",
+    "replaced": "Diganti",
+    "completed": "Selesai",
+    "cancelled": "Dibatalkan"
+  }
+}

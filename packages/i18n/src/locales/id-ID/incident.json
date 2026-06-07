@@ -1,0 +1,21 @@
+{
+  "title": "Insiden",
+  "category": "Kategori",
+  "severity": "Tingkat",
+  "sanction": "Sanksi",
+  "investigate": "Investigasi",
+  "resolve": "Selesaikan",
+  "dismiss": "Tutup Tanpa Tindakan",
+  "severityLevels": {
+    "low": "Rendah",
+    "medium": "Sedang",
+    "high": "Tinggi"
+  },
+  "status": {
+    "reported": "Dilaporkan",
+    "investigating": "Investigasi",
+    "action_taken": "Tindakan Diambil",
+    "resolved": "Selesai",
+    "dismissed": "Ditutup"
+  }
+}

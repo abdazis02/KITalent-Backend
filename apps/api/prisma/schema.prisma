@@ -1,0 +1,2447 @@
+// KITalent — Prisma schema (foundation).
+//
+// Conventions enforced across ALL models (PRD §0.6, §0.7):
+//   - UUID primary keys (never auto-increment)
+//   - tenant_id on every tenant-scoped row
+//   - standard audit fields: created/updated/deleted_at, created/updated/deleted_by
+//   - soft delete via deletedAt
+//
+// This file scaffolds the platform/identity/RBAC core plus two example domain
+// models (Company, Employee) demonstrating the standard-field pattern. Business
+// modules from PRD §10 are added model-by-model following the same shape.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TenantMode {
+  outsourcing
+  saas_hris
+  hybrid
+}
+
+enum TenantStatus {
+  trial
+  active
+  past_due
+  suspended
+  inactive
+}
+
+enum SubscriptionPlan {
+  starter
+  professional
+  enterprise
+  custom
+}
+
+enum ThemePreference {
+  system
+  light
+  dark
+}
+
+enum RoleLevel {
+  platform
+  operator
+  client
+  company
+}
+
+enum AttendanceStatus {
+  present
+  late
+  early_leave
+  absent
+  leave
+  permission
+  sick
+  holiday
+  day_off
+  overtime
+  pending_correction
+  corrected
+  rejected
+}
+
+enum RequestStatus {
+  draft
+  submitted
+  waiting_approval
+  approved
+  rejected
+  need_revision
+  cancelled
+}
+
+enum EmployeeStatus {
+  draft
+  candidate
+  onboarding
+  active
+  probation
+  suspended
+  resigned
+  terminated
+  blacklisted
+}
+
+// PRD §17.5 — employment type.
+enum EmploymentType {
+  permanent
+  contract
+  outsourcing
+  daily
+  internship
+}
+
+// PRD §17.5 — employee contact / document kinds.
+enum EmployeeContactType {
+  personal
+  emergency
+  family
+}
+
+// PRD §10.17 — payroll component types & run lifecycle.
+enum PayrollComponentType {
+  earning
+  deduction
+  benefit
+  tax
+  employer_contribution
+  employee_contribution
+  reimbursement
+  loan
+  adjustment
+}
+
+enum PayrollStatus {
+  draft
+  calculating
+  need_review
+  waiting_approval
+  approved
+  paid
+  locked
+  cancelled
+}
+
+// PRD §10.21 — invoice lifecycle & line item kinds.
+enum InvoiceStatus {
+  draft
+  waiting_approval
+  approved
+  sent
+  partially_paid
+  paid
+  overdue
+  cancelled
+  void
+}
+
+enum InvoiceItemType {
+  service
+  payroll
+  management_fee
+  penalty
+  additional
+  discount
+}
+
+// PRD §10.10 — contract kinds & lifecycle.
+enum ContractType {
+  pkwt
+  pkwtt
+  client_agreement
+  addendum
+  placement_letter
+  nda
+  offering_letter
+}
+
+enum ContractStatus {
+  draft
+  waiting_approval
+  approved
+  sent
+  signed
+  active
+  expiring_soon
+  expired
+  renewed
+  terminated
+  cancelled
+}
+
+// PRD §10.11 — placement lifecycle.
+enum PlacementStatus {
+  draft
+  waiting_approval
+  active
+  on_hold
+  replacement_requested
+  replaced
+  completed
+  cancelled
+}
+
+// PRD §10.19 — reimbursement lifecycle.
+enum ReimbursementStatus {
+  submitted
+  waiting_approval
+  approved
+  rejected
+  paid
+  cancelled
+}
+
+// PRD §10.20 — loan / cash advance lifecycle.
+enum LoanStatus {
+  requested
+  approved
+  active
+  completed
+  rejected
+  cancelled
+}
+
+// PRD §10.9 — recruitment vacancy status & candidate pipeline stages.
+enum VacancyStatus {
+  draft
+  open
+  on_hold
+  closed
+  cancelled
+}
+
+enum RecruitmentStage {
+  applied
+  screening
+  shortlisted
+  interview_scheduled
+  interviewed
+  assessment
+  mcu
+  background_check
+  offering
+  accepted
+  rejected
+  onboarding
+  hired
+}
+
+// PRD §10.22 — performance review lifecycle.
+enum PerformanceStatus {
+  draft
+  in_review
+  submitted
+  approved
+  published
+  archived
+}
+
+// PRD §10.23 — incident / disciplinary lifecycle.
+enum IncidentStatus {
+  reported
+  investigating
+  action_taken
+  resolved
+  dismissed
+}
+
+// PRD §10.24 — asset / uniform lifecycle.
+enum AssetStatus {
+  available
+  assigned
+  returned
+  damaged
+  lost
+  retired
+}
+
+// PRD §10.25 — training & enrollment lifecycle.
+enum TrainingStatus {
+  planned
+  ongoing
+  completed
+  cancelled
+}
+
+enum EnrollmentStatus {
+  enrolled
+  attended
+  passed
+  failed
+  no_show
+}
+
+// PRD §10.8 — manpower request lifecycle.
+enum ManpowerRequestStatus {
+  draft
+  submitted
+  client_approved
+  operator_reviewed
+  need_revision
+  in_recruitment
+  partially_fulfilled
+  fulfilled
+  cancelled
+  rejected
+  closed
+}
+
+// PRD §10.27 — approval workflow instance lifecycle.
+enum ApprovalInstanceStatus {
+  pending
+  approved
+  rejected
+  cancelled
+}
+
+enum ApprovalStepStatus {
+  pending
+  approved
+  rejected
+  skipped
+}
+
+// PRD §17.15 — who approves a step (resolved from the org hierarchy or RBAC).
+enum ApproverType {
+  role
+  user
+  supervisor
+  department_head
+  hr
+  finance
+  client
+}
+
+// ---------------------------------------------------------------------------
+// Tenant & subscription (PRD §10.2)
+// ---------------------------------------------------------------------------
+model Tenant {
+  id          String           @id @default(uuid()) @db.Uuid
+  name        String
+  legalName   String?
+  mode        TenantMode       @default(saas_hris)
+  status      TenantStatus     @default(trial)
+  plan        SubscriptionPlan @default(starter)
+  // Tenant-level defaults for the cross-cutting requirements (PRD §10.34).
+  defaultLocale String         @default("id-ID")
+  defaultTheme  ThemePreference @default(system)
+  // Feature flags / limits resolved from plan; JSON keeps them configurable.
+  featureFlags Json            @default("{}")
+  limits       Json            @default("{}")
+  branding     Json            @default("{}")
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  users       User[]
+  roles       Role[]
+  companies   Company[]
+  employees   Employee[]
+  clients     Client[]
+  attendances AttendanceRecord[]
+  leaveTypes  LeaveType[]
+  leaveRequests LeaveRequest[]
+  payrollComponents PayrollComponent[]
+  payrollRuns PayrollRun[]
+  invoices    Invoice[]
+  shifts      Shift[]
+  overtimeRequests OvertimeRequest[]
+  contracts   Contract[]
+  placements  Placement[]
+  reimbursements Reimbursement[]
+  loans       Loan[]
+  vacancies   JobVacancy[]
+  candidates  Candidate[]
+  performanceReviews PerformanceReview[]
+  incidents   Incident[]
+  documents   Document[]
+  notifications Notification[]
+  assets      Asset[]
+  assetAssignments AssetAssignment[]
+  trainings   Training[]
+  enrollments TrainingEnrollment[]
+  branches    Branch[]
+  workLocations WorkLocation[]
+  departments Department[]
+  positions   Position[]
+  jobLevels   JobLevel[]
+  serviceCategories ServiceCategory[]
+  manpowerRequests ManpowerRequest[]
+  fingerprintDevices FingerprintDevice[]
+  approvalWorkflows ApprovalWorkflow[]
+  approvalInstances ApprovalInstance[]
+  auditLogs   AuditLog[]
+
+  @@index([status])
+  @@map("tenants")
+}
+
+// ---------------------------------------------------------------------------
+// Identity (PRD §10.1)
+// ---------------------------------------------------------------------------
+model User {
+  id           String  @id @default(uuid()) @db.Uuid
+  tenantId     String? @db.Uuid
+  email        String
+  phone        String?
+  passwordHash String
+  fullName     String
+  isActive     Boolean @default(true)
+  twoFactorSecret String?
+  twoFactorEnabled Boolean @default(false)
+  failedLoginAttempts Int @default(0)
+  lockedUntil  DateTime?
+  lastLoginAt  DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant        Tenant?         @relation(fields: [tenantId], references: [id])
+  userRoles     UserRole[]
+  preference    UserPreference?
+  refreshTokens RefreshToken[]
+  notifications Notification[]
+  employee      Employee?
+
+  @@unique([tenantId, email])
+  @@index([tenantId])
+  @@map("users")
+}
+
+/// PRD §14 / §10.34: theme + locale preference, synced to backend on login.
+model UserPreference {
+  id       String          @id @default(uuid()) @db.Uuid
+  userId   String          @unique @db.Uuid
+  locale   String          @default("id-ID")
+  theme    ThemePreference @default(system)
+  timezone String          @default("Asia/Jakarta")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_preferences")
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  tokenHash String // hashed, never stored plain (PRD §0.10)
+  deviceId  String?
+  userAgent String?
+  ipAddress String?
+  expiresAt DateTime
+  revokedAt DateTime?
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("refresh_tokens")
+}
+
+// ---------------------------------------------------------------------------
+// RBAC (PRD §9) — roles/permissions are seeded, configurable data.
+// ---------------------------------------------------------------------------
+model Role {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String?   @db.Uuid // null = system/global role template
+  key         String // stable identifier, e.g. "hr_manager" (label via i18n)
+  level       RoleLevel
+  isSystem    Boolean   @default(false)
+  description String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  tenant          Tenant?          @relation(fields: [tenantId], references: [id])
+  userRoles       UserRole[]
+  rolePermissions RolePermission[]
+
+  @@unique([tenantId, key])
+  @@map("roles")
+}
+
+model Permission {
+  id     String @id @default(uuid()) @db.Uuid
+  // "module.action.scope" — PRD §9.1
+  key    String @unique
+  module String
+  action String
+  scope  String
+
+  createdAt DateTime @default(now())
+
+  rolePermissions RolePermission[]
+
+  @@index([module])
+  @@map("permissions")
+}
+
+model RolePermission {
+  roleId       String @db.Uuid
+  permissionId String @db.Uuid
+
+  role       Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@id([roleId, permissionId])
+  @@map("role_permissions")
+}
+
+model UserRole {
+  userId String @db.Uuid
+  roleId String @db.Uuid
+  // Scope binding for scoped permissions (e.g. which client/department).
+  scopeRef String? @db.Uuid
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+
+  @@id([userId, roleId])
+  @@map("user_roles")
+}
+
+// ---------------------------------------------------------------------------
+// Audit (PRD §0.5) — every sensitive action recorded.
+// ---------------------------------------------------------------------------
+model AuditLog {
+  id         String   @id @default(uuid()) @db.Uuid
+  tenantId   String?  @db.Uuid
+  actorId    String?  @db.Uuid
+  action     String // e.g. "login", "payroll.run", "contract.sign"
+  entityType String?
+  entityId   String?
+  metadata   Json     @default("{}")
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  tenant Tenant? @relation(fields: [tenantId], references: [id])
+
+  @@index([tenantId, createdAt])
+  @@index([actorId])
+  @@map("audit_logs")
+}
+
+// ---------------------------------------------------------------------------
+// Example domain models (pattern reference) — PRD §10.3, §10.5
+// ---------------------------------------------------------------------------
+model Company {
+  id        String  @id @default(uuid()) @db.Uuid
+  tenantId  String  @db.Uuid
+  name      String
+  legalName String?
+  taxNumber String?
+  address   String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  employees Employee[]
+  branches  Branch[]
+
+  @@index([tenantId])
+  @@map("companies")
+}
+
+model Employee {
+  id           String         @id @default(uuid()) @db.Uuid
+  tenantId     String         @db.Uuid
+  companyId    String?        @db.Uuid
+  departmentId String?        @db.Uuid
+  positionId   String?        @db.Uuid
+  jobLevelId   String?        @db.Uuid
+  // Direct supervisor / atasan langsung (PRD §10.4, §17.5) — self relation.
+  supervisorId String?        @db.Uuid
+  // Links the employee to their login account (PRD §10.30 self-service).
+  userId       String?        @unique @db.Uuid
+  employeeNo   String
+  fullName     String
+  preferredName String?
+  status       EmployeeStatus @default(draft)
+  email        String?
+  phone        String?
+  // Personal data (PRD §17.5).
+  gender        String?
+  birthPlace    String?
+  birthDate     DateTime? @db.Date
+  maritalStatus String?
+  religion      String?
+  nationality   String?
+  address       String?
+  photoFileId   String?  @db.Uuid
+  employmentType EmploymentType?
+  joinDate      DateTime? @db.Date
+  endDate       DateTime? @db.Date
+  resignDate    DateTime? @db.Date
+  payrollGroupId String? @db.Uuid
+  // Sensitive fields — access restricted by permission (PRD §0.10).
+  nik          String?
+  npwp         String?
+  bankAccount  String?
+  // Base monthly salary in whole IDR (no cents). Payroll components add/subtract.
+  basicSalary  Int            @default(0)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  company    Company?    @relation(fields: [companyId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+  position   Position?   @relation(fields: [positionId], references: [id])
+  jobLevel   JobLevel?   @relation(fields: [jobLevelId], references: [id])
+  user       User?       @relation(fields: [userId], references: [id])
+  supervisor   Employee?  @relation("EmployeeSupervisor", fields: [supervisorId], references: [id])
+  subordinates Employee[] @relation("EmployeeSupervisor")
+  attendances   AttendanceRecord[]
+  leaveRequests LeaveRequest[]
+  payrollItems  EmployeePayrollItem[]
+  payslips      Payslip[]
+  overtimeRequests OvertimeRequest[]
+  contracts     Contract[]
+  placements    Placement[]
+  reimbursements Reimbursement[]
+  loans         Loan[]
+  performanceReviews PerformanceReview[]
+  incidents     Incident[]
+  assetAssignments AssetAssignment[]
+  enrollments   TrainingEnrollment[]
+  payrollGroup  PayrollGroup?       @relation(fields: [payrollGroupId], references: [id])
+  contactsList  EmployeeContact[]
+  bankAccounts  EmployeeBankAccount[]
+  employeeDocuments EmployeeDocument[]
+  positionHistories EmployeePositionHistory[]
+  employeeSchedules EmployeeSchedule[]
+  leaveBalances LeaveBalance[]
+  permissionRequests PermissionRequest[]
+
+  @@unique([tenantId, employeeNo])
+  @@index([tenantId, status])
+  @@map("employees")
+}
+
+// ---------------------------------------------------------------------------
+// Client — Outsourcing mode (PRD §10.6)
+// ---------------------------------------------------------------------------
+model Client {
+  id          String  @id @default(uuid()) @db.Uuid
+  tenantId    String  @db.Uuid
+  code        String
+  name        String
+  legalName   String?
+  npwp        String?
+  industry    String?
+  address     String?
+  billingAddress String?
+  picName     String?
+  picEmail    String?
+  picPhone    String?
+  isActive    Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant     Tenant       @relation(fields: [tenantId], references: [id])
+  invoices   Invoice[]
+  contracts  Contract[]
+  placements Placement[]
+  vacancies  JobVacancy[]
+  manpowerRequests ManpowerRequest[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, isActive])
+  @@map("clients")
+}
+
+// ---------------------------------------------------------------------------
+// Attendance (PRD §10.13)
+// ---------------------------------------------------------------------------
+model AttendanceRecord {
+  id         String           @id @default(uuid()) @db.Uuid
+  tenantId   String           @db.Uuid
+  employeeId String           @db.Uuid
+  date       DateTime         @db.Date
+  checkInAt  DateTime?
+  checkOutAt DateTime?
+  status     AttendanceStatus @default(present)
+  // Geo + selfie capture (PRD §10.13). Photos live in MinIO; we store the key.
+  checkInLat  Float?
+  checkInLng  Float?
+  checkOutLat Float?
+  checkOutLng Float?
+  selfieKey   String?
+  deviceId    String?
+  ipAddress   String?
+  note        String?
+  // Attendance correction (PRD §10.13): proposed times pending approval.
+  correctionReason     String?
+  proposedCheckInAt    DateTime?
+  proposedCheckOutAt   DateTime?
+  correctionApprovedBy String?   @db.Uuid
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([employeeId, date])
+  @@index([tenantId, date])
+  @@map("attendance_records")
+}
+
+// ---------------------------------------------------------------------------
+// Leave (PRD §10.15)
+// ---------------------------------------------------------------------------
+model LeaveType {
+  id          String  @id @default(uuid()) @db.Uuid
+  tenantId    String  @db.Uuid
+  code        String
+  name        String
+  isPaid      Boolean @default(true)
+  defaultQuota Int    @default(12)
+  isActive    Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  tenant   Tenant         @relation(fields: [tenantId], references: [id])
+  requests LeaveRequest[]
+
+  @@unique([tenantId, code])
+  @@map("leave_types")
+}
+
+model LeaveRequest {
+  id          String        @id @default(uuid()) @db.Uuid
+  tenantId    String        @db.Uuid
+  employeeId  String        @db.Uuid
+  leaveTypeId String        @db.Uuid
+  startDate   DateTime      @db.Date
+  endDate     DateTime      @db.Date
+  totalDays   Int
+  reason      String?
+  attachmentKey String?
+  status      RequestStatus @default(submitted)
+  approvedBy  String?       @db.Uuid
+  approvedAt  DateTime?
+  rejectReason String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant    Tenant    @relation(fields: [tenantId], references: [id])
+  employee  Employee  @relation(fields: [employeeId], references: [id])
+  leaveType LeaveType @relation(fields: [leaveTypeId], references: [id])
+
+  @@index([tenantId, status])
+  @@index([employeeId])
+  @@map("leave_requests")
+}
+
+// ---------------------------------------------------------------------------
+// Payroll (PRD §10.17) — components & formulas are configurable data, never
+// hardcoded. Amounts are whole IDR (Int); the engine reads attendance.
+// ---------------------------------------------------------------------------
+
+/// Configurable master of earnings/deductions/benefits per tenant.
+model PayrollComponent {
+  id        String               @id @default(uuid()) @db.Uuid
+  tenantId  String               @db.Uuid
+  code      String
+  name      String
+  type      PayrollComponentType
+  taxable   Boolean              @default(false)
+  isActive  Boolean              @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  tenant Tenant                @relation(fields: [tenantId], references: [id])
+  items  EmployeePayrollItem[]
+
+  @@unique([tenantId, code])
+  @@map("payroll_components")
+}
+
+/// Recurring component assigned to an employee with a fixed monthly amount.
+model EmployeePayrollItem {
+  id          String @id @default(uuid()) @db.Uuid
+  tenantId    String @db.Uuid
+  employeeId  String @db.Uuid
+  componentId String @db.Uuid
+  amount      Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  employee  Employee         @relation(fields: [employeeId], references: [id])
+  component PayrollComponent @relation(fields: [componentId], references: [id])
+
+  @@unique([employeeId, componentId])
+  @@index([tenantId])
+  @@map("employee_payroll_items")
+}
+
+/// A payroll run for one period. Locked runs are immutable (PRD §10.17 rules).
+model PayrollRun {
+  id          String        @id @default(uuid()) @db.Uuid
+  tenantId    String        @db.Uuid
+  periodLabel String // e.g. "2026-06"
+  periodStart DateTime      @db.Date
+  periodEnd   DateTime      @db.Date
+  status      PayrollStatus @default(draft)
+  totalGross  Int           @default(0)
+  totalDeduction Int        @default(0)
+  totalNet    Int           @default(0)
+  employeeCount Int         @default(0)
+  approvedBy  String?       @db.Uuid
+  approvedAt  DateTime?
+  lockedAt    DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  payslips Payslip[]
+  invoices Invoice[]
+
+  @@unique([tenantId, periodLabel])
+  @@index([tenantId, status])
+  @@map("payroll_runs")
+}
+
+/// One employee's computed result within a run (the salary slip header).
+model Payslip {
+  id            String @id @default(uuid()) @db.Uuid
+  tenantId      String @db.Uuid
+  runId         String @db.Uuid
+  employeeId    String @db.Uuid
+  basicSalary   Int    @default(0)
+  totalEarning  Int    @default(0)
+  totalDeduction Int   @default(0)
+  netSalary     Int    @default(0)
+  // Attendance + overtime integration snapshot for the period.
+  presentDays     Int  @default(0)
+  absentDays      Int  @default(0)
+  overtimeMinutes Int  @default(0)
+
+  createdAt DateTime @default(now())
+
+  run        PayrollRun         @relation(fields: [runId], references: [id], onDelete: Cascade)
+  employee   Employee           @relation(fields: [employeeId], references: [id])
+  components PayslipComponent[]
+  salarySlip SalarySlip?
+
+  @@unique([runId, employeeId])
+  @@index([tenantId])
+  @@map("payslips")
+}
+
+/// A single computed line on a payslip (snapshot, immutable once run is locked).
+model PayslipComponent {
+  id        String               @id @default(uuid()) @db.Uuid
+  payslipId String               @db.Uuid
+  code      String
+  name      String
+  type      PayrollComponentType
+  amount    Int
+
+  payslip Payslip @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+
+  @@index([payslipId])
+  @@map("payslip_components")
+}
+
+// ---------------------------------------------------------------------------
+// Invoice & Billing (PRD §10.21) — Outsourcing mode. Amounts are whole IDR.
+// ---------------------------------------------------------------------------
+model Invoice {
+  id           String        @id @default(uuid()) @db.Uuid
+  tenantId     String        @db.Uuid
+  clientId     String        @db.Uuid
+  payrollRunId String?       @db.Uuid // set when generated from a payroll run
+  invoiceNo    String
+  periodLabel  String?
+  issueDate    DateTime      @db.Date
+  dueDate      DateTime      @db.Date
+  status       InvoiceStatus @default(draft)
+  // Money breakdown (PRD §10.21): subtotal → +tax → −discount = total; paid tracks settlement.
+  subtotal       Int @default(0)
+  taxPercent     Int @default(0)
+  taxAmount      Int @default(0)
+  discountAmount Int @default(0)
+  totalAmount    Int @default(0)
+  paidAmount     Int @default(0)
+  notes        String?
+  approvedBy   String?   @db.Uuid
+  approvedAt   DateTime?
+  sentAt       DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant     Tenant           @relation(fields: [tenantId], references: [id])
+  client     Client           @relation(fields: [clientId], references: [id])
+  payrollRun PayrollRun?      @relation(fields: [payrollRunId], references: [id])
+  items      InvoiceItem[]
+  payments   InvoicePayment[]
+
+  @@unique([tenantId, invoiceNo])
+  @@index([tenantId, status])
+  @@index([clientId])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String          @id @default(uuid()) @db.Uuid
+  invoiceId   String          @db.Uuid
+  type        InvoiceItemType @default(service)
+  description String
+  quantity    Int             @default(1)
+  unitPrice   Int             @default(0)
+  amount      Int             @default(0)
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_items")
+}
+
+model InvoicePayment {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  invoiceId String   @db.Uuid
+  amount    Int
+  paidAt    DateTime @default(now())
+  method    String?
+  reference String?
+  note      String?
+
+  createdAt DateTime @default(now())
+  createdBy String?  @db.Uuid
+
+  invoice Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  @@index([invoiceId])
+  @@map("invoice_payments")
+}
+
+// ---------------------------------------------------------------------------
+// Shift & Schedule (PRD §10.12) — configurable shift master.
+// ---------------------------------------------------------------------------
+model Shift {
+  id               String  @id @default(uuid()) @db.Uuid
+  tenantId         String  @db.Uuid
+  code             String
+  name             String
+  startTime        String // "HH:mm"
+  endTime          String // "HH:mm"
+  breakStart       String?
+  breakEnd         String?
+  lateToleranceMin Int     @default(0)
+  minWorkingHour   Int     @default(8)
+  overtimeEligible Boolean @default(true)
+  isOvernight      Boolean @default(false)
+  isActive         Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  placements Placement[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, isActive])
+  @@map("shifts")
+}
+
+// ---------------------------------------------------------------------------
+// Contract Management (PRD §10.10) — employee & client contracts/documents.
+// ---------------------------------------------------------------------------
+model Contract {
+  id         String         @id @default(uuid()) @db.Uuid
+  tenantId   String         @db.Uuid
+  employeeId String?        @db.Uuid
+  clientId   String?        @db.Uuid
+  number     String
+  title      String
+  type       ContractType
+  status     ContractStatus @default(draft)
+  startDate  DateTime       @db.Date
+  endDate    DateTime?      @db.Date
+  value      Int? // contract value in whole IDR (optional)
+  fileKey    String? // MinIO key of the signed PDF
+  notes      String?
+  approvedBy String?        @db.Uuid
+  approvedAt DateTime?
+  signedAt   DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  employee   Employee?   @relation(fields: [employeeId], references: [id])
+  client     Client?     @relation(fields: [clientId], references: [id])
+  placements Placement[]
+
+  @@unique([tenantId, number])
+  @@index([tenantId, status])
+  @@index([endDate])
+  @@map("contracts")
+}
+
+// ---------------------------------------------------------------------------
+// Placement Management (PRD §10.11) — assign an employee to a client/site.
+// ---------------------------------------------------------------------------
+model Placement {
+  id           String          @id @default(uuid()) @db.Uuid
+  tenantId     String          @db.Uuid
+  employeeId   String          @db.Uuid
+  clientId     String          @db.Uuid
+  contractId   String?         @db.Uuid
+  shiftId      String?         @db.Uuid
+  position     String?
+  location     String?
+  supervisorId String?         @db.Uuid
+  status       PlacementStatus @default(draft)
+  startDate    DateTime        @db.Date
+  endDate      DateTime?       @db.Date
+  notes        String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant   Tenant    @relation(fields: [tenantId], references: [id])
+  employee Employee  @relation(fields: [employeeId], references: [id])
+  client   Client    @relation(fields: [clientId], references: [id])
+  contract Contract? @relation(fields: [contractId], references: [id])
+  shift    Shift?    @relation(fields: [shiftId], references: [id])
+
+  @@index([tenantId, status])
+  @@index([employeeId])
+  @@index([clientId])
+  @@map("placements")
+}
+
+// ---------------------------------------------------------------------------
+// Reimbursement (PRD §10.19) — request → approve → pay. Amounts whole IDR.
+// ---------------------------------------------------------------------------
+model Reimbursement {
+  id         String              @id @default(uuid()) @db.Uuid
+  tenantId   String              @db.Uuid
+  employeeId String              @db.Uuid
+  category   String
+  title      String
+  amount     Int
+  receiptKey String? // MinIO key of the receipt
+  status     ReimbursementStatus @default(submitted)
+  approvedBy String?             @db.Uuid
+  approvedAt DateTime?
+  rejectReason String?
+  paidAt     DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@index([tenantId, status])
+  @@index([employeeId])
+  @@map("reimbursements")
+}
+
+// ---------------------------------------------------------------------------
+// Loan / Cash Advance (PRD §10.20) — active loans deduct an installment in
+// payroll until the outstanding balance reaches zero.
+// ---------------------------------------------------------------------------
+model Loan {
+  id               String     @id @default(uuid()) @db.Uuid
+  tenantId         String     @db.Uuid
+  employeeId       String     @db.Uuid
+  title            String
+  principal        Int
+  installmentCount Int
+  monthlyDeduction Int
+  outstanding      Int
+  status           LoanStatus @default(requested)
+  approvedBy       String?    @db.Uuid
+  approvedAt       DateTime?
+  rejectReason     String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+  installments LoanInstallment[]
+
+  @@index([tenantId, status])
+  @@index([employeeId])
+  @@map("loans")
+}
+
+// ---------------------------------------------------------------------------
+// Recruitment / ATS (PRD §10.9)
+// ---------------------------------------------------------------------------
+model JobVacancy {
+  id           String        @id @default(uuid()) @db.Uuid
+  tenantId     String        @db.Uuid
+  clientId     String?       @db.Uuid // outsourcing manpower request → vacancy
+  code         String
+  title        String
+  position     String?
+  location     String?
+  quantity     Int           @default(1)
+  status       VacancyStatus @default(draft)
+  description  String?
+  requirements String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  client     Client?     @relation(fields: [clientId], references: [id])
+  candidates Candidate[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+  @@map("job_vacancies")
+}
+
+model Candidate {
+  id                  String           @id @default(uuid()) @db.Uuid
+  tenantId            String           @db.Uuid
+  vacancyId           String?          @db.Uuid
+  fullName            String
+  email               String?
+  phone               String?
+  source              String?
+  stage               RecruitmentStage @default(applied)
+  cvKey               String? // MinIO key of the CV
+  notes               String?
+  rejectReason        String?
+  blacklisted         Boolean          @default(false)
+  // Set when the candidate is converted into an Employee (PRD §10.9).
+  convertedEmployeeId String?          @db.Uuid
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant  Tenant      @relation(fields: [tenantId], references: [id])
+  vacancy JobVacancy? @relation(fields: [vacancyId], references: [id])
+
+  @@index([tenantId, stage])
+  @@index([vacancyId])
+  @@map("candidates")
+}
+
+// ---------------------------------------------------------------------------
+// Performance Management (PRD §10.22) — weighted KPI review.
+// ---------------------------------------------------------------------------
+model PerformanceReview {
+  id           String            @id @default(uuid()) @db.Uuid
+  tenantId     String            @db.Uuid
+  employeeId   String            @db.Uuid
+  reviewerId   String?           @db.Uuid
+  period       String // e.g. "2026-H1"
+  type         String            @default("supervisor") // supervisor | self | client | peer
+  overallScore Int               @default(0) // 0..100, weighted from items
+  notes        String?
+  status       PerformanceStatus @default(draft)
+  publishedAt  DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant   Tenant            @relation(fields: [tenantId], references: [id])
+  employee Employee          @relation(fields: [employeeId], references: [id])
+  items    PerformanceItem[]
+
+  @@index([tenantId, status])
+  @@index([employeeId])
+  @@map("performance_reviews")
+}
+
+model PerformanceItem {
+  id       String @id @default(uuid()) @db.Uuid
+  reviewId String @db.Uuid
+  kpi      String
+  weight   Int    @default(1)
+  score    Int    @default(0) // 0..100
+
+  review PerformanceReview @relation(fields: [reviewId], references: [id], onDelete: Cascade)
+
+  @@index([reviewId])
+  @@map("performance_items")
+}
+
+// ---------------------------------------------------------------------------
+// Incident & Disciplinary (PRD §10.23)
+// ---------------------------------------------------------------------------
+model Incident {
+  id                String         @id @default(uuid()) @db.Uuid
+  tenantId          String         @db.Uuid
+  employeeId        String         @db.Uuid
+  category          String
+  severity          String         @default("medium") // low | medium | high
+  title             String
+  description       String?
+  incidentDate      DateTime       @db.Date
+  status            IncidentStatus @default(reported)
+  sanction          String?
+  investigationNotes String?
+  attachmentKey     String?
+  reportedBy        String?        @db.Uuid
+  resolvedBy        String?        @db.Uuid
+  resolvedAt        DateTime?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@index([tenantId, status])
+  @@index([employeeId])
+  @@map("incidents")
+}
+
+// ---------------------------------------------------------------------------
+// Document Management (PRD §10.26) — metadata only; bytes live in MinIO.
+// ---------------------------------------------------------------------------
+model Document {
+  id         String    @id @default(uuid()) @db.Uuid
+  tenantId   String    @db.Uuid
+  // Polymorphic owner: employee | client | contract | candidate | general
+  ownerType  String    @default("general")
+  ownerId    String?   @db.Uuid
+  type       String // KTP | NPWP | CV | Kontrak | ... (configurable)
+  fileName   String
+  objectKey  String // MinIO object key (unique per tenant)
+  mimeType   String?
+  size       Int       @default(0)
+  expiryDate DateTime? @db.Date
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, objectKey])
+  @@index([tenantId, ownerType, ownerId])
+  @@map("documents")
+}
+
+// ---------------------------------------------------------------------------
+// Notification System (PRD §10.28) — in-app notifications.
+// ---------------------------------------------------------------------------
+model Notification {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String?   @db.Uuid
+  recipientUserId String    @db.Uuid
+  event           String // e.g. "leave.approved"
+  title           String
+  body            String?
+  data            Json      @default("{}")
+  readAt          DateTime?
+
+  createdAt DateTime @default(now())
+
+  tenant    Tenant? @relation(fields: [tenantId], references: [id])
+  recipient User    @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+
+  @@index([recipientUserId, readAt])
+  @@map("notifications")
+}
+
+// ---------------------------------------------------------------------------
+// Asset & Uniform Management (PRD §10.24)
+// ---------------------------------------------------------------------------
+model Asset {
+  id                String      @id @default(uuid()) @db.Uuid
+  tenantId          String      @db.Uuid
+  code              String
+  name              String
+  category          String      @default("asset") // asset | uniform | device | ...
+  serialNumber      String?
+  status            AssetStatus @default(available)
+  currentEmployeeId String?     @db.Uuid
+  location          String?
+  value             Int? // acquisition value in whole IDR
+  notes             String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant      Tenant            @relation(fields: [tenantId], references: [id])
+  assignments AssetAssignment[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+  @@map("assets")
+}
+
+model AssetAssignment {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @db.Uuid
+  assetId         String    @db.Uuid
+  employeeId      String    @db.Uuid
+  assignedAt      DateTime  @default(now())
+  returnedAt      DateTime?
+  returnCondition String? // good | damaged | lost
+  notes           String?
+
+  createdAt DateTime @default(now())
+  createdBy String?  @db.Uuid
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  asset    Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@index([assetId])
+  @@index([employeeId])
+  @@map("asset_assignments")
+}
+
+// ---------------------------------------------------------------------------
+// Training & Certification (PRD §10.25)
+// ---------------------------------------------------------------------------
+model Training {
+  id          String         @id @default(uuid()) @db.Uuid
+  tenantId    String         @db.Uuid
+  code        String
+  title       String
+  description String?
+  trainer     String?
+  location    String?
+  scheduledAt DateTime?
+  status      TrainingStatus @default(planned)
+  certifies   Boolean        @default(false) // produces a certification
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant      Tenant               @relation(fields: [tenantId], references: [id])
+  enrollments TrainingEnrollment[]
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+  @@map("trainings")
+}
+
+model TrainingEnrollment {
+  id                String           @id @default(uuid()) @db.Uuid
+  tenantId          String           @db.Uuid
+  trainingId        String           @db.Uuid
+  employeeId        String           @db.Uuid
+  status            EnrollmentStatus @default(enrolled)
+  score             Int?
+  certificateKey    String? // MinIO key of the certificate
+  certificateExpiry DateTime?        @db.Date
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?  @db.Uuid
+  updatedBy String?  @db.Uuid
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  training Training @relation(fields: [trainingId], references: [id], onDelete: Cascade)
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@unique([trainingId, employeeId])
+  @@index([tenantId])
+  @@index([certificateExpiry])
+  @@map("training_enrollments")
+}
+
+// ---------------------------------------------------------------------------
+// Company structure (PRD §10.3) — branches & work locations (geofence).
+// ---------------------------------------------------------------------------
+model Branch {
+  id        String  @id @default(uuid()) @db.Uuid
+  tenantId  String  @db.Uuid
+  companyId String? @db.Uuid
+  code      String
+  name      String
+  address   String?
+  phone     String?
+  isActive  Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+
+  tenant  Tenant   @relation(fields: [tenantId], references: [id])
+  company Company? @relation(fields: [companyId], references: [id])
+
+  @@unique([tenantId, code])
+  @@map("branches")
+}
+
+model WorkLocation {
+  id             String  @id @default(uuid()) @db.Uuid
+  tenantId       String  @db.Uuid
+  code           String
+  name           String
+  address        String?
+  latitude       Float?
+  longitude      Float?
+  geofenceRadius Int     @default(100) // metres (PRD §10.13 geofence)
+  isActive       Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, code])
+  @@map("work_locations")
+}
+
+// ---------------------------------------------------------------------------
+// Organization Structure (PRD §10.4)
+// ---------------------------------------------------------------------------
+model Department {
+  id             String  @id @default(uuid()) @db.Uuid
+  tenantId       String  @db.Uuid
+  parentId       String? @db.Uuid // sub-department
+  code           String
+  name           String
+  headEmployeeId String? @db.Uuid
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+
+  tenant    Tenant       @relation(fields: [tenantId], references: [id])
+  parent    Department?  @relation("DepartmentTree", fields: [parentId], references: [id])
+  children  Department[] @relation("DepartmentTree")
+  positions Position[]
+  employees Employee[]
+
+  @@unique([tenantId, code])
+  @@map("departments")
+}
+
+model JobLevel {
+  id       String @id @default(uuid()) @db.Uuid
+  tenantId String @db.Uuid
+  code     String
+  name     String
+  rank     Int    @default(1)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  tenant    Tenant     @relation(fields: [tenantId], references: [id])
+  positions Position[]
+  employees Employee[]
+
+  @@unique([tenantId, code])
+  @@map("job_levels")
+}
+
+model Position {
+  id           String  @id @default(uuid()) @db.Uuid
+  tenantId     String  @db.Uuid
+  departmentId String? @db.Uuid
+  jobLevelId   String? @db.Uuid
+  code         String
+  name         String
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+
+  tenant     Tenant      @relation(fields: [tenantId], references: [id])
+  department Department? @relation(fields: [departmentId], references: [id])
+  jobLevel   JobLevel?   @relation(fields: [jobLevelId], references: [id])
+  employees  Employee[]
+
+  @@unique([tenantId, code])
+  @@map("positions")
+}
+
+// ---------------------------------------------------------------------------
+// Service Catalog (PRD §10.7) — Outsourcing service categories.
+// ---------------------------------------------------------------------------
+model ServiceCategory {
+  id                   String  @id @default(uuid()) @db.Uuid
+  tenantId             String  @db.Uuid
+  code                 String
+  name                 String
+  description          String?
+  minEducation         String?
+  minExperienceYears   Int?
+  requiresCertification Boolean @default(false)
+  defaultRate          Int? // default billing rate (whole IDR)
+  isActive             Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+
+  tenant           Tenant            @relation(fields: [tenantId], references: [id])
+  manpowerRequests ManpowerRequest[]
+
+  @@unique([tenantId, code])
+  @@map("service_categories")
+}
+
+// ---------------------------------------------------------------------------
+// Manpower Request (PRD §10.8) — client requests for workers → recruitment.
+// ---------------------------------------------------------------------------
+model ManpowerRequest {
+  id                String                @id @default(uuid()) @db.Uuid
+  tenantId          String                @db.Uuid
+  clientId          String                @db.Uuid
+  serviceCategoryId String?               @db.Uuid
+  code              String
+  quantity          Int                   @default(1)
+  location          String?
+  startDate         DateTime?             @db.Date
+  durationMonths    Int?
+  shiftInfo         String?
+  qualification     String?
+  budget            Int?
+  status            ManpowerRequestStatus @default(draft)
+  clientApprovedAt  DateTime?
+  operatorReviewedAt DateTime?
+  notes             String?
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant          Tenant           @relation(fields: [tenantId], references: [id])
+  client          Client           @relation(fields: [clientId], references: [id])
+  serviceCategory ServiceCategory? @relation(fields: [serviceCategoryId], references: [id])
+
+  @@unique([tenantId, code])
+  @@index([tenantId, status])
+  @@map("manpower_requests")
+}
+
+// ---------------------------------------------------------------------------
+// Fingerprint Integration (PRD §10.14)
+// ---------------------------------------------------------------------------
+model FingerprintDevice {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @db.Uuid
+  code           String
+  name           String
+  brand          String?
+  model          String?
+  ipAddress      String?
+  port           Int?
+  location       String?
+  serialNumber   String?
+  connectionType String? // tcp | cloud | usb
+  lastSyncAt     DateTime?
+  isActive       Boolean   @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+
+  tenant Tenant @relation(fields: [tenantId], references: [id])
+
+  @@unique([tenantId, code])
+  @@map("fingerprint_devices")
+}
+
+// ---------------------------------------------------------------------------
+// Approval Workflow (PRD §10.27, §17.15) — configurable, hierarchical,
+// multi-step (berjenjang) engine. Steps resolve approvers from the org
+// hierarchy (direct supervisor, department head) or from RBAC roles/users,
+// and may be conditional on an amount threshold.
+// ---------------------------------------------------------------------------
+model ApprovalWorkflow {
+  id       String  @id @default(uuid()) @db.Uuid
+  tenantId String  @db.Uuid
+  module   String // e.g. "leave" | "overtime" | "reimbursement" | "payroll"
+  name     String
+  isActive Boolean @default(true)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+
+  tenant        Tenant             @relation(fields: [tenantId], references: [id])
+  stepTemplates ApprovalStep[]
+  instances     ApprovalInstance[]
+
+  @@index([tenantId, module])
+  @@map("approval_workflows")
+}
+
+/// Step template (PRD §17.15 approval_steps).
+model ApprovalStep {
+  id              String       @id @default(uuid()) @db.Uuid
+  tenantId        String       @db.Uuid
+  workflowId      String       @db.Uuid
+  stepOrder       Int
+  name            String
+  approverType    ApproverType @default(role)
+  approverRoleKey String? // role key when approverType = role/hr/finance
+  approverUserId  String?      @db.Uuid // explicit user when approverType = user
+  // Conditional approval (PRD §10.27): step applies only when amount >= minAmount.
+  minAmount       Int          @default(0)
+  isRequired      Boolean      @default(true)
+
+  createdAt DateTime @default(now())
+
+  workflow ApprovalWorkflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  @@index([workflowId, stepOrder])
+  @@map("approval_steps")
+}
+
+/// A running approval request for one record (PRD §17.15 approval_requests).
+model ApprovalInstance {
+  id          String                 @id @default(uuid()) @db.Uuid
+  tenantId    String                 @db.Uuid
+  workflowId  String                 @db.Uuid
+  module      String
+  entityId    String                 @db.Uuid // the record being approved
+  // Subject employee — used to resolve supervisor / department head.
+  subjectEmployeeId String?          @db.Uuid
+  amount      Int                    @default(0) // drives amount-based conditions
+  status      ApprovalInstanceStatus @default(pending)
+  currentStep Int                    @default(0)
+  requestedBy String?                @db.Uuid
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  createdBy String?  @db.Uuid
+
+  tenant   Tenant               @relation(fields: [tenantId], references: [id])
+  workflow ApprovalWorkflow     @relation(fields: [workflowId], references: [id])
+  steps    ApprovalStepRecord[]
+
+  @@index([tenantId, status])
+  @@index([module, entityId])
+  @@map("approval_instances")
+}
+
+/// Materialised step on a running instance — holds the resolved approver and the action taken.
+model ApprovalStepRecord {
+  id                    String             @id @default(uuid()) @db.Uuid
+  instanceId            String             @db.Uuid
+  stepOrder             Int
+  name                  String
+  approverType          String             @default("role")
+  approverRoleKey       String?
+  resolvedApproverUserId String?           @db.Uuid // concrete approver (supervisor/dept-head/user)
+  status                ApprovalStepStatus @default(pending)
+  actedByUserId         String?            @db.Uuid
+  actedAt               DateTime?
+  comment               String?
+
+  instance ApprovalInstance @relation(fields: [instanceId], references: [id], onDelete: Cascade)
+
+  @@index([instanceId])
+  @@map("approval_step_records")
+}
+
+// ---------------------------------------------------------------------------
+// Overtime (PRD §10.16) — approved overtime feeds the payroll engine.
+// ---------------------------------------------------------------------------
+model OvertimeRequest {
+  id              String        @id @default(uuid()) @db.Uuid
+  tenantId        String        @db.Uuid
+  employeeId      String        @db.Uuid
+  date            DateTime      @db.Date
+  startTime       String // "HH:mm"
+  endTime         String // "HH:mm"
+  durationMinutes Int
+  reason          String?
+  attachmentKey   String?
+  status          RequestStatus @default(submitted)
+  approvedBy      String?       @db.Uuid
+  approvedAt      DateTime?
+  rejectReason    String?
+  // Set when a payroll run has consumed this overtime, so it is not double-paid.
+  payrollRunId    String?       @db.Uuid
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  deletedAt DateTime?
+  createdBy String?   @db.Uuid
+  updatedBy String?   @db.Uuid
+  deletedBy String?   @db.Uuid
+
+  tenant   Tenant   @relation(fields: [tenantId], references: [id])
+  employee Employee @relation(fields: [employeeId], references: [id])
+
+  @@index([tenantId, status])
+  @@index([employeeId, date])
+  @@map("overtime_requests")
+}
+
+// ===========================================================================
+// FULL PRD §17 EXPANSION — additional tables for complete spec coverage.
+// Child tables carry tenantId as a scoping column (FK enforced at app layer)
+// to avoid bloating the Tenant model with dozens of back-relations.
+// ===========================================================================
+
+// ---- §17.5 Employee sub-tables --------------------------------------------
+model EmployeeContact {
+  id           String              @id @default(uuid()) @db.Uuid
+  tenantId     String              @db.Uuid
+  employeeId   String              @db.Uuid
+  type         EmployeeContactType @default(personal)
+  name         String
+  relationship String?
+  phone        String?
+  email        String?
+  address      String?
+  createdAt    DateTime            @default(now())
+  updatedAt    DateTime            @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("employee_contacts")
+}
+
+model EmployeeBankAccount {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @db.Uuid
+  employeeId        String   @db.Uuid
+  bankName          String
+  accountNumber     String
+  accountHolderName String
+  isPrimary         Boolean  @default(false)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("employee_bank_accounts")
+}
+
+model EmployeeDocument {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @db.Uuid
+  employeeId     String    @db.Uuid
+  documentType   String
+  fileKey        String?
+  documentNumber String?
+  issuedDate     DateTime? @db.Date
+  expiredDate    DateTime? @db.Date
+  status         String    @default("valid")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@index([expiredDate])
+  @@map("employee_documents")
+}
+
+model EmployeePositionHistory {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @db.Uuid
+  employeeId      String   @db.Uuid
+  oldPositionId   String?  @db.Uuid
+  newPositionId   String?  @db.Uuid
+  oldDepartmentId String?  @db.Uuid
+  newDepartmentId String?  @db.Uuid
+  effectiveDate   DateTime @db.Date
+  reason          String?
+  createdAt       DateTime @default(now())
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("employee_position_histories")
+}
+
+// ---- §17.11/12 Payroll groups, periods, salary slips, loan installments ----
+model PayrollGroup {
+  id              String    @id @default(uuid()) @db.Uuid
+  tenantId        String    @db.Uuid
+  companyId       String?   @db.Uuid
+  name            String
+  description     String?
+  paymentSchedule String?
+  status          String    @default("active")
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  deletedAt       DateTime?
+
+  employees Employee[]
+  periods   PayrollPeriod[]
+
+  @@index([tenantId])
+  @@map("payroll_groups")
+}
+
+model PayrollPeriod {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @db.Uuid
+  payrollGroupId String    @db.Uuid
+  name           String
+  startDate      DateTime  @db.Date
+  endDate        DateTime  @db.Date
+  paymentDate    DateTime? @db.Date
+  status         String    @default("open")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  payrollGroup     PayrollGroup      @relation(fields: [payrollGroupId], references: [id], onDelete: Cascade)
+  loanInstallments LoanInstallment[]
+
+  @@index([tenantId, status])
+  @@map("payroll_periods")
+}
+
+model SalarySlip {
+  id           String    @id @default(uuid()) @db.Uuid
+  tenantId     String    @db.Uuid
+  payslipId    String    @unique @db.Uuid
+  employeeId   String    @db.Uuid
+  fileKey      String?
+  publishedAt  DateTime?
+  downloadedAt DateTime?
+  status       String    @default("draft")
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  payslip Payslip @relation(fields: [payslipId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([employeeId])
+  @@map("salary_slips")
+}
+
+model LoanInstallment {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @db.Uuid
+  loanId            String    @db.Uuid
+  payrollPeriodId   String?   @db.Uuid
+  installmentNumber Int
+  amount            Int
+  status            String    @default("pending")
+  paidAt            DateTime?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  loan          Loan           @relation(fields: [loanId], references: [id], onDelete: Cascade)
+  payrollPeriod PayrollPeriod? @relation(fields: [payrollPeriodId], references: [id])
+
+  @@index([loanId])
+  @@map("loan_installments")
+}
+
+model ReimbursementType {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @db.Uuid
+  code            String
+  name            String
+  maxAmount       Int?
+  requiresReceipt Boolean  @default(true)
+  status          String   @default("active")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@unique([tenantId, code])
+  @@map("reimbursement_types")
+}
+
+// ---- §17.9/10 Schedule, attendance policy, biometric logs, leave -----------
+model WorkSchedule {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @db.Uuid
+  name         String
+  description  String?
+  scheduleType String   @default("fixed")
+  status       String   @default("active")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("work_schedules")
+}
+
+model EmployeeSchedule {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @db.Uuid
+  employeeId     String   @db.Uuid
+  shiftId        String   @db.Uuid
+  workLocationId String?  @db.Uuid
+  scheduleDate   DateTime @db.Date
+  status         String   @default("scheduled")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, scheduleDate])
+  @@index([tenantId, scheduleDate])
+  @@map("employee_schedules")
+}
+
+model AttendancePolicy {
+  id                            String   @id @default(uuid()) @db.Uuid
+  tenantId                      String   @db.Uuid
+  name                          String
+  requireGps                    Boolean  @default(true)
+  requireSelfie                 Boolean  @default(true)
+  allowOutsideGeofence          Boolean  @default(false)
+  allowAttendanceCorrection     Boolean  @default(true)
+  allowOfflineAttendance        Boolean  @default(false)
+  lateToleranceMinutes          Int      @default(0)
+  earlyCheckoutToleranceMinutes Int      @default(0)
+  status                        String   @default("active")
+  createdAt                     DateTime @default(now())
+  updatedAt                     DateTime @updatedAt
+
+  @@index([tenantId])
+  @@map("attendance_policies")
+}
+
+model BiometricLog {
+  id              String   @id @default(uuid()) @db.Uuid
+  tenantId        String   @db.Uuid
+  deviceId        String   @db.Uuid
+  employeeId      String?  @db.Uuid
+  biometricUserId String
+  logTime         DateTime
+  logType         String?
+  rawPayload      Json     @default("{}")
+  syncStatus      String   @default("pending")
+  createdAt       DateTime @default(now())
+
+  @@index([tenantId, logTime])
+  @@index([deviceId])
+  @@map("biometric_logs")
+}
+
+model LeaveBalance {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @db.Uuid
+  employeeId     String   @db.Uuid
+  leaveTypeId    String   @db.Uuid
+  year           Int
+  openingBalance Int      @default(0)
+  earned         Int      @default(0)
+  used           Int      @default(0)
+  remaining      Int      @default(0)
+  expired        Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, leaveTypeId, year])
+  @@index([tenantId])
+  @@map("leave_balances")
+}
+
+model PermissionRequest {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @db.Uuid
+  employeeId     String    @db.Uuid
+  permissionDate DateTime  @db.Date
+  startTime      String?
+  endTime        String?
+  reason         String
+  attachmentKey  String?
+  status         String    @default("submitted")
+  approvedBy     String?   @db.Uuid
+  approvedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  employee Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, status])
+  @@index([employeeId])
+  @@map("permission_requests")
+}
+
+// ---- §17.6 Client sub-tables, service positions, rate cards, MR items ------
+model ClientContact {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String   @db.Uuid
+  clientId  String   @db.Uuid
+  name      String
+  position  String?
+  email     String?
+  phone     String?
+  type      String?
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([clientId])
+  @@map("client_contacts")
+}
+
+model ClientContract {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @db.Uuid
+  clientId       String   @db.Uuid
+  contractNumber String
+  title          String
+  startDate      DateTime @db.Date
+  endDate        DateTime @db.Date
+  billingType    String?
+  serviceFeeType String?
+  fileKey        String?
+  status         String   @default("active")
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@unique([tenantId, contractNumber])
+  @@index([clientId])
+  @@map("client_contracts")
+}
+
+model ServicePosition {
+  id                    String   @id @default(uuid()) @db.Uuid
+  tenantId              String   @db.Uuid
+  serviceCategoryId     String   @db.Uuid
+  code                  String
+  name                  String
+  description           String?
+  minimumEducation      String?
+  minimumExperience     String?
+  requiredCertification String?
+  status                String   @default("active")
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@unique([tenantId, code])
+  @@index([serviceCategoryId])
+  @@map("service_positions")
+}
+
+model ClientRateCard {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @db.Uuid
+  clientId          String    @db.Uuid
+  servicePositionId String    @db.Uuid
+  baseSalary        Int       @default(0)
+  allowance         Int       @default(0)
+  managementFee     Int       @default(0)
+  billingRate       Int       @default(0)
+  currency          String    @default("IDR")
+  effectiveStart    DateTime  @db.Date
+  effectiveEnd      DateTime? @db.Date
+  status            String    @default("active")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([clientId])
+  @@map("client_rate_cards")
+}
+
+model ManpowerRequestItem {
+  id                String    @id @default(uuid()) @db.Uuid
+  tenantId          String    @db.Uuid
+  manpowerRequestId String    @db.Uuid
+  servicePositionId String?   @db.Uuid
+  quantity          Int       @default(1)
+  workLocationId    String?   @db.Uuid
+  shiftId           String?   @db.Uuid
+  startDate         DateTime? @db.Date
+  endDate           DateTime? @db.Date
+  qualification     String?
+  notes             String?
+  status            String    @default("open")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  @@index([manpowerRequestId])
+  @@map("manpower_request_items")
+}
+
+// ---- §17.7 Recruitment full ------------------------------------------------
+model JobRequisition {
+  id                String   @id @default(uuid()) @db.Uuid
+  tenantId          String   @db.Uuid
+  manpowerRequestId String?  @db.Uuid
+  companyId         String?  @db.Uuid
+  clientId          String?  @db.Uuid
+  title             String
+  description       String?
+  quantity          Int      @default(1)
+  status            String   @default("open")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@index([tenantId, status])
+  @@map("job_requisitions")
+}
+
+model CandidateApplication {
+  id             String   @id @default(uuid()) @db.Uuid
+  tenantId       String   @db.Uuid
+  candidateId    String   @db.Uuid
+  vacancyId      String   @db.Uuid
+  pipelineStatus String   @default("applied")
+  appliedAt      DateTime @default(now())
+  currentStage   String   @default("applied")
+  score          Int?
+  notes          String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  interviews InterviewSchedule[]
+  offers     CandidateOffer[]
+
+  @@unique([candidateId, vacancyId])
+  @@index([tenantId, pipelineStatus])
+  @@map("candidate_applications")
+}
+
+model CandidateDocument {
+  id           String   @id @default(uuid()) @db.Uuid
+  tenantId     String   @db.Uuid
+  candidateId  String   @db.Uuid
+  documentType String
+  fileKey      String?
+  status       String   @default("valid")
+  createdAt    DateTime @default(now())
+
+  @@index([candidateId])
+  @@map("candidate_documents")
+}
+
+model InterviewSchedule {
+  id                     String   @id @default(uuid()) @db.Uuid
+  tenantId               String   @db.Uuid
+  candidateApplicationId String   @db.Uuid
+  interviewerId          String?  @db.Uuid
+  scheduledAt            DateTime
+  location               String?
+  meetingLink            String?
+  status                 String   @default("scheduled")
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  application CandidateApplication @relation(fields: [candidateApplicationId], references: [id], onDelete: Cascade)
+  result      InterviewResult?
+
+  @@index([candidateApplicationId])
+  @@map("interview_schedules")
+}
+
+model InterviewResult {
+  id                  String   @id @default(uuid()) @db.Uuid
+  tenantId            String   @db.Uuid
+  interviewScheduleId String   @unique @db.Uuid
+  score               Int?
+  result              String   @default("consideration")
+  notes               String?
+  createdAt           DateTime @default(now())
+
+  interview InterviewSchedule @relation(fields: [interviewScheduleId], references: [id], onDelete: Cascade)
+
+  @@map("interview_results")
+}
+
+model CandidateOffer {
+  id                     String    @id @default(uuid()) @db.Uuid
+  tenantId               String    @db.Uuid
+  candidateApplicationId String    @db.Uuid
+  offeredSalary          Int?
+  startDate              DateTime? @db.Date
+  fileKey                String?
+  status                 String    @default("draft")
+  createdAt              DateTime  @default(now())
+  updatedAt              DateTime  @updatedAt
+
+  application CandidateApplication @relation(fields: [candidateApplicationId], references: [id], onDelete: Cascade)
+
+  @@index([candidateApplicationId])
+  @@map("candidate_offers")
+}
+
+model OnboardingTask {
+  id          String    @id @default(uuid()) @db.Uuid
+  tenantId    String    @db.Uuid
+  employeeId  String?   @db.Uuid
+  candidateId String?   @db.Uuid
+  title       String
+  description String?
+  dueDate     DateTime? @db.Date
+  status      String    @default("pending")
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([tenantId, status])
+  @@map("onboarding_tasks")
+}
+
+// ---- §17.8 Placement history & replacement ---------------------------------
+model PlacementHistory {
+  id            String   @id @default(uuid()) @db.Uuid
+  tenantId      String   @db.Uuid
+  placementId   String   @db.Uuid
+  employeeId    String   @db.Uuid
+  oldClientId   String?  @db.Uuid
+  newClientId   String?  @db.Uuid
+  oldLocationId String?  @db.Uuid
+  newLocationId String?  @db.Uuid
+  effectiveDate DateTime @db.Date
+  type          String
+  reason        String?
+  createdAt     DateTime @default(now())
+
+  @@index([placementId])
+  @@map("placement_histories")
+}
+
+model ReplacementRequest {
+  id                    String    @id @default(uuid()) @db.Uuid
+  tenantId              String    @db.Uuid
+  placementId           String    @db.Uuid
+  requestedBy           String    @db.Uuid
+  reason                String
+  requestedDate         DateTime  @db.Date
+  targetReplacementDate DateTime? @db.Date
+  status                String    @default("submitted")
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+
+  @@index([tenantId, status])
+  @@index([placementId])
+  @@map("replacement_requests")
+}
+
+// ---- §17.2 Subscription / platform -----------------------------------------
+model Plan {
+  id             String   @id @default(uuid()) @db.Uuid
+  name           String
+  code           String   @unique
+  description    String?
+  priceMonthly   Int      @default(0)
+  priceYearly    Int      @default(0)
+  employeeLimit  Int      @default(0)
+  storageLimitMb Int      @default(0)
+  isActive       Boolean  @default(true)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  features      PlanFeature[]
+  subscriptions TenantSubscription[]
+
+  @@map("subscription_plans")
+}
+
+model PlanFeature {
+  id          String   @id @default(uuid()) @db.Uuid
+  planId      String   @db.Uuid
+  featureCode String
+  featureName String
+  isEnabled   Boolean  @default(true)
+  limitValue  Int?
+  createdAt   DateTime @default(now())
+
+  plan Plan @relation(fields: [planId], references: [id], onDelete: Cascade)
+
+  @@index([planId])
+  @@map("plan_features")
+}
+
+model TenantSubscription {
+  id             String    @id @default(uuid()) @db.Uuid
+  tenantId       String    @db.Uuid
+  planId         String    @db.Uuid
+  startDate      DateTime  @db.Date
+  endDate        DateTime  @db.Date
+  trialEndDate   DateTime? @db.Date
+  billingCycle   String    @default("monthly")
+  employeeLimit  Int       @default(0)
+  storageLimitMb Int       @default(0)
+  status         String    @default("trial")
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  plan Plan @relation(fields: [planId], references: [id])
+
+  @@index([tenantId])
+  @@map("tenant_subscriptions")
+}
+
+model LoginHistory {
+  id            String   @id @default(uuid()) @db.Uuid
+  userId        String   @db.Uuid
+  tenantId      String?  @db.Uuid
+  ipAddress     String?
+  userAgent     String?
+  deviceId      String?
+  status        String
+  failureReason String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@map("login_histories")
+}
+
+model NotificationTemplate {
+  id        String   @id @default(uuid()) @db.Uuid
+  tenantId  String?  @db.Uuid
+  code      String
+  channel   String
+  subject   String?
+  body      String
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([tenantId, code])
+  @@map("notification_templates")
+}
+
+// ---- §17.3 DB-driven i18n (enterprise tenant overrides) --------------------
+model TranslationKey {
+  id          String   @id @default(uuid()) @db.Uuid
+  namespace   String
+  key         String
+  description String?
+  isSystem    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  translations Translation[]
+
+  @@unique([namespace, key])
+  @@map("translation_keys")
+}
+
+model Translation {
+  id               String   @id @default(uuid()) @db.Uuid
+  translationKeyId String   @db.Uuid
+  tenantId         String?  @db.Uuid
+  locale           String
+  value            String
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  translationKey TranslationKey @relation(fields: [translationKeyId], references: [id], onDelete: Cascade)
+
+  @@unique([translationKeyId, tenantId, locale])
+  @@map("translations")
+}

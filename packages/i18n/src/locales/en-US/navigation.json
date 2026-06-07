@@ -1,0 +1,19 @@
+{
+  "dashboard": "Dashboard",
+  "employees": "Employees",
+  "clients": "Clients",
+  "manpowerRequest": "Manpower Request",
+  "recruitment": "Recruitment",
+  "placement": "Placement",
+  "schedule": "Schedule & Shift",
+  "attendance": "Attendance",
+  "leave": "Leave & Permission",
+  "overtime": "Overtime",
+  "payroll": "Payroll",
+  "invoice": "Invoice & Billing",
+  "performance": "Performance",
+  "documents": "Documents",
+  "reports": "Reports",
+  "approvals": "Approvals",
+  "settings": "Settings"
+}

@@ -1,0 +1,91 @@
+/*
+ * KITalent semantic design tokens — PRD §10.34.
+ *
+ * Light Mode lives on :root; Dark Mode on .dark (next-themes / class strategy).
+ * Components reference ONLY these semantic tokens via the Tailwind preset
+ * (e.g. bg-background, text-foreground, border-border, bg-primary). Never use
+ * hardcoded hex/hsl in a component.
+ *
+ * Channels are bare HSL ("H S% L%") so they compose as hsl(var(--token) / <alpha>).
+ */
+
+:root {
+  /* Surfaces */
+  --background: 220 20% 98%;
+  --foreground: 221 39% 11%;
+  --card: 0 0% 100%;
+  --card-foreground: 221 39% 11%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 221 39% 11%;
+
+  /* Brand / interactive */
+  --primary: 245 75% 59%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 220 16% 96%;
+  --secondary-foreground: 217 19% 27%;
+  --accent: 35 92% 52%;
+  --accent-foreground: 224 47% 7%;
+  --muted: 220 16% 96%;
+  --muted-foreground: 220 9% 46%;
+
+  /* Lines & inputs */
+  --border: 220 14% 91%;
+  --input: 220 14% 91%;
+  --ring: 245 75% 59%;
+
+  /* Status / feedback (badges, toasts, charts) */
+  --success: 142 71% 45%;
+  --success-foreground: 0 0% 100%;
+  --warning: 38 92% 50%;
+  --warning-foreground: 224 47% 7%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --info: 199 89% 48%;
+  --info-foreground: 0 0% 100%;
+
+  /* Charts */
+  --chart-1: 245 75% 59%;
+  --chart-2: 35 92% 52%;
+  --chart-3: 142 71% 45%;
+  --chart-4: 199 89% 48%;
+  --chart-5: 280 65% 60%;
+
+  --radius: 0.625rem;
+}
+
+.dark {
+  --background: 224 47% 7%;
+  --foreground: 220 16% 96%;
+  --card: 221 39% 11%;
+  --card-foreground: 220 16% 96%;
+  --popover: 221 39% 11%;
+  --popover-foreground: 220 16% 96%;
+
+  --primary: 243 86% 71%;
+  --primary-foreground: 224 47% 7%;
+  --secondary: 215 28% 17%;
+  --secondary-foreground: 220 16% 96%;
+  --accent: 38 96% 60%;
+  --accent-foreground: 224 47% 7%;
+  --muted: 215 28% 17%;
+  --muted-foreground: 218 10% 64%;
+
+  --border: 215 28% 17%;
+  --input: 215 28% 17%;
+  --ring: 243 86% 71%;
+
+  --success: 142 71% 45%;
+  --success-foreground: 224 47% 7%;
+  --warning: 38 96% 60%;
+  --warning-foreground: 224 47% 7%;
+  --destructive: 0 72% 51%;
+  --destructive-foreground: 0 0% 100%;
+  --info: 199 89% 48%;
+  --info-foreground: 224 47% 7%;
+
+  --chart-1: 243 86% 71%;
+  --chart-2: 38 96% 60%;
+  --chart-3: 142 71% 45%;
+  --chart-4: 199 89% 48%;
+  --chart-5: 280 70% 70%;
+}

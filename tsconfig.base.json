@@ -1,0 +1,28 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "lib": ["ES2022"],
+    "declaration": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "noImplicitOverride": true,
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@kitalent/types": ["packages/types/src"],
+      "@kitalent/shared": ["packages/shared/src"],
+      "@kitalent/i18n": ["packages/i18n/src"],
+      "@kitalent/design-tokens": ["packages/design-tokens/src"]
+    }
+  },
+  "exclude": ["node_modules", "dist", ".next", "build"]
+}

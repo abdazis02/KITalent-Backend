@@ -1,0 +1,13 @@
+{
+  "title": "Tenant",
+  "plan": "Subscription Plan",
+  "mode": "Mode",
+  "featureFlags": "Feature Flags",
+  "status": {
+    "trial": "Trial",
+    "active": "Active",
+    "past_due": "Past Due",
+    "suspended": "Suspended",
+    "inactive": "Inactive"
+  }
+}

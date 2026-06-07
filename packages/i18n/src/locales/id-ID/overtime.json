@@ -1,0 +1,17 @@
+{
+  "title": "Lembur",
+  "request": "Ajukan Lembur",
+  "date": "Tanggal",
+  "startTime": "Jam Mulai",
+  "endTime": "Jam Selesai",
+  "duration": "Durasi",
+  "reason": "Alasan",
+  "pay": "Upah Lembur",
+  "status": {
+    "submitted": "Diajukan",
+    "waiting_approval": "Menunggu Persetujuan",
+    "approved": "Disetujui",
+    "rejected": "Ditolak",
+    "cancelled": "Dibatalkan"
+  }
+}

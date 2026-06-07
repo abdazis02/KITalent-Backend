@@ -1,0 +1,23 @@
+{
+  "title": "Kontrak",
+  "number": "Nomor Kontrak",
+  "type": "Jenis Kontrak",
+  "startDate": "Tanggal Mulai",
+  "endDate": "Tanggal Berakhir",
+  "sign": "Tanda Tangani",
+  "terminate": "Akhiri Kontrak",
+  "expiringSoon": "Akan Berakhir",
+  "status": {
+    "draft": "Draf",
+    "waiting_approval": "Menunggu Persetujuan",
+    "approved": "Disetujui",
+    "sent": "Terkirim",
+    "signed": "Ditandatangani",
+    "active": "Aktif",
+    "expiring_soon": "Akan Berakhir",
+    "expired": "Kedaluwarsa",
+    "renewed": "Diperpanjang",
+    "terminated": "Diakhiri",
+    "cancelled": "Dibatalkan"
+  }
+}

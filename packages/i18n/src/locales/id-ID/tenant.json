@@ -1,0 +1,13 @@
+{
+  "title": "Tenant",
+  "plan": "Paket Langganan",
+  "mode": "Mode",
+  "featureFlags": "Fitur Aktif",
+  "status": {
+    "trial": "Uji Coba",
+    "active": "Aktif",
+    "past_due": "Terlambat Bayar",
+    "suspended": "Ditangguhkan",
+    "inactive": "Nonaktif"
+  }
+}

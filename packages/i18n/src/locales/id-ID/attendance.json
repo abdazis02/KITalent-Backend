@@ -1,0 +1,25 @@
+{
+  "title": "Absensi",
+  "checkIn": "Absen Masuk",
+  "checkOut": "Absen Pulang",
+  "breakIn": "Mulai Istirahat",
+  "breakOut": "Selesai Istirahat",
+  "selfieRequired": "Swafoto wajib untuk absensi",
+  "outsideGeofence": "Anda berada di luar area lokasi kerja",
+  "todaySchedule": "Jadwal Hari Ini",
+  "status": {
+    "present": "Hadir",
+    "late": "Terlambat",
+    "early_leave": "Pulang Awal",
+    "absent": "Tidak Hadir",
+    "leave": "Cuti",
+    "permission": "Izin",
+    "sick": "Sakit",
+    "holiday": "Libur",
+    "day_off": "Libur Kerja",
+    "overtime": "Lembur",
+    "pending_correction": "Menunggu Koreksi",
+    "corrected": "Dikoreksi",
+    "rejected": "Ditolak"
+  }
+}

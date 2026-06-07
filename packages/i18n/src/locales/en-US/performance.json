@@ -1,0 +1,19 @@
+{
+  "title": "Performance",
+  "review": "Review",
+  "period": "Period",
+  "kpi": "KPI",
+  "weight": "Weight",
+  "score": "Score",
+  "overallScore": "Overall Score",
+  "submit": "Submit",
+  "publish": "Publish",
+  "status": {
+    "draft": "Draft",
+    "in_review": "In Review",
+    "submitted": "Submitted",
+    "approved": "Approved",
+    "published": "Published",
+    "archived": "Archived"
+  }
+}

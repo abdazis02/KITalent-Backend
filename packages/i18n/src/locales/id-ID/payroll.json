@@ -1,0 +1,23 @@
+{
+  "title": "Payroll",
+  "run": "Proses Payroll",
+  "period": "Periode",
+  "basicSalary": "Gaji Pokok",
+  "totalEarning": "Total Pendapatan",
+  "totalDeduction": "Total Potongan",
+  "netSalary": "Gaji Bersih",
+  "component": "Komponen",
+  "salarySlip": "Slip Gaji",
+  "approve": "Setujui Payroll",
+  "lock": "Kunci Payroll",
+  "status": {
+    "draft": "Draf",
+    "calculating": "Menghitung",
+    "need_review": "Perlu Tinjauan",
+    "waiting_approval": "Menunggu Persetujuan",
+    "approved": "Disetujui",
+    "paid": "Dibayar",
+    "locked": "Terkunci",
+    "cancelled": "Dibatalkan"
+  }
+}

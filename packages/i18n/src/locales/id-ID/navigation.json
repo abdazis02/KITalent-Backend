@@ -1,0 +1,19 @@
+{
+  "dashboard": "Dasbor",
+  "employees": "Karyawan",
+  "clients": "Client",
+  "manpowerRequest": "Permintaan Tenaga Kerja",
+  "recruitment": "Rekrutmen",
+  "placement": "Penempatan",
+  "schedule": "Jadwal & Shift",
+  "attendance": "Absensi",
+  "leave": "Cuti & Izin",
+  "overtime": "Lembur",
+  "payroll": "Payroll",
+  "invoice": "Invoice & Tagihan",
+  "performance": "Performa",
+  "documents": "Dokumen",
+  "reports": "Laporan",
+  "approvals": "Persetujuan",
+  "settings": "Pengaturan"
+}

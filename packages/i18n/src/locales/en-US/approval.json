@@ -1,0 +1,14 @@
+{
+  "title": "Approval",
+  "workflow": "Approval Workflow",
+  "step": "Step",
+  "approver": "Approver",
+  "approve": "Approve",
+  "reject": "Reject",
+  "status": {
+    "pending": "Pending",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled"
+  }
+}

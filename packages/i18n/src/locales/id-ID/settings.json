@@ -1,0 +1,15 @@
+{
+  "title": "Pengaturan",
+  "appearance": "Tampilan",
+  "theme": "Tema",
+  "themeSystem": "Mengikuti Sistem",
+  "themeLight": "Mode Terang",
+  "themeDark": "Mode Gelap",
+  "language": "Bahasa",
+  "languageIndonesian": "Bahasa Indonesia",
+  "languageEnglish": "English",
+  "profile": "Profil",
+  "security": "Keamanan",
+  "notifications": "Notifikasi",
+  "preferencesSaved": "Preferensi berhasil disimpan"
+}

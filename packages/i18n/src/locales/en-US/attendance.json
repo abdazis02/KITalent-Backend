@@ -1,0 +1,25 @@
+{
+  "title": "Attendance",
+  "checkIn": "Check In",
+  "checkOut": "Check Out",
+  "breakIn": "Start Break",
+  "breakOut": "End Break",
+  "selfieRequired": "A selfie is required for attendance",
+  "outsideGeofence": "You are outside the work location area",
+  "todaySchedule": "Today's Schedule",
+  "status": {
+    "present": "Present",
+    "late": "Late",
+    "early_leave": "Early Leave",
+    "absent": "Absent",
+    "leave": "Leave",
+    "permission": "Permission",
+    "sick": "Sick",
+    "holiday": "Holiday",
+    "day_off": "Day Off",
+    "overtime": "Overtime",
+    "pending_correction": "Pending Correction",
+    "corrected": "Corrected",
+    "rejected": "Rejected"
+  }
+}

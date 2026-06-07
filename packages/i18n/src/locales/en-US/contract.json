@@ -1,0 +1,23 @@
+{
+  "title": "Contract",
+  "number": "Contract Number",
+  "type": "Contract Type",
+  "startDate": "Start Date",
+  "endDate": "End Date",
+  "sign": "Sign",
+  "terminate": "Terminate",
+  "expiringSoon": "Expiring Soon",
+  "status": {
+    "draft": "Draft",
+    "waiting_approval": "Waiting Approval",
+    "approved": "Approved",
+    "sent": "Sent",
+    "signed": "Signed",
+    "active": "Active",
+    "expiring_soon": "Expiring Soon",
+    "expired": "Expired",
+    "renewed": "Renewed",
+    "terminated": "Terminated",
+    "cancelled": "Cancelled"
+  }
+}

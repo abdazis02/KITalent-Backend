@@ -1,0 +1,16 @@
+{
+  "title": "Pinjaman / Kasbon",
+  "principal": "Pokok Pinjaman",
+  "installment": "Cicilan",
+  "installmentCount": "Jumlah Cicilan",
+  "monthlyDeduction": "Potongan Bulanan",
+  "outstanding": "Sisa Pinjaman",
+  "status": {
+    "requested": "Diajukan",
+    "approved": "Disetujui",
+    "active": "Berjalan",
+    "completed": "Lunas",
+    "rejected": "Ditolak",
+    "cancelled": "Dibatalkan"
+  }
+}

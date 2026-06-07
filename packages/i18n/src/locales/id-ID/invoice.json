@@ -1,0 +1,26 @@
+{
+  "title": "Invoice",
+  "invoiceNo": "Nomor Invoice",
+  "client": "Client",
+  "issueDate": "Tanggal Terbit",
+  "dueDate": "Jatuh Tempo",
+  "subtotal": "Subtotal",
+  "tax": "Pajak (PPN)",
+  "discount": "Diskon",
+  "total": "Total Tagihan",
+  "paid": "Terbayar",
+  "managementFee": "Management Fee",
+  "send": "Kirim Invoice",
+  "recordPayment": "Catat Pembayaran",
+  "status": {
+    "draft": "Draf",
+    "waiting_approval": "Menunggu Persetujuan",
+    "approved": "Disetujui",
+    "sent": "Terkirim",
+    "partially_paid": "Dibayar Sebagian",
+    "paid": "Lunas",
+    "overdue": "Jatuh Tempo",
+    "cancelled": "Dibatalkan",
+    "void": "Batal"
+  }
+}

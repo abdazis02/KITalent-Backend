@@ -1,0 +1,11 @@
+{
+  "title": "Notifikasi",
+  "markRead": "Tandai Dibaca",
+  "markAllRead": "Tandai Semua Dibaca",
+  "unread": "Belum Dibaca",
+  "empty": "Belum ada notifikasi",
+  "events": {
+    "leave.approved": "Pengajuan cuti disetujui",
+    "leave.rejected": "Pengajuan cuti ditolak"
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "name": "kitalent",
+  "version": "1.1.0",
+  "private": true,
+  "description": "KITalent — Outsourcing Management Platform + SaaS HRIS. Monorepo.",
+  "packageManager": "pnpm@9.12.0",
+  "engines": {
+    "node": ">=20.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "typecheck": "turbo run typecheck",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",
+    "clean": "turbo run clean && rm -rf node_modules",
+    "infra:up": "docker compose up -d postgres redis minio",
+    "infra:down": "docker compose down",
+    "db:migrate": "pnpm --filter @kitalent/api prisma migrate dev",
+    "db:generate": "pnpm --filter @kitalent/api prisma generate",
+    "db:seed": "pnpm --filter @kitalent/api db:seed"
+  },
+  "devDependencies": {
+    "prettier": "^3.3.3",
+    "turbo": "^2.1.3",
+    "typescript": "^5.6.2"
+  }
+}

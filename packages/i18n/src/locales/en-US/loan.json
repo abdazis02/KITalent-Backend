@@ -1,0 +1,16 @@
+{
+  "title": "Loan / Cash Advance",
+  "principal": "Principal",
+  "installment": "Installment",
+  "installmentCount": "Number of Installments",
+  "monthlyDeduction": "Monthly Deduction",
+  "outstanding": "Outstanding Balance",
+  "status": {
+    "requested": "Requested",
+    "approved": "Approved",
+    "active": "Active",
+    "completed": "Completed",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled"
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "title": "Dokumen",
+  "type": "Jenis Dokumen",
+  "fileName": "Nama Berkas",
+  "owner": "Pemilik",
+  "expiryDate": "Tanggal Kedaluwarsa",
+  "upload": "Unggah",
+  "download": "Unduh",
+  "uploadSuccess": "Dokumen berhasil diunggah"
+}

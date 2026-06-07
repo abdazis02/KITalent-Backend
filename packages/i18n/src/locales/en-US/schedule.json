@@ -1,0 +1,11 @@
+{
+  "title": "Schedule & Shift",
+  "shift": "Shift",
+  "shiftName": "Shift Name",
+  "startTime": "Start Time",
+  "endTime": "End Time",
+  "breakTime": "Break Time",
+  "lateTolerance": "Late Tolerance",
+  "overnight": "Overnight",
+  "roster": "Roster"
+}

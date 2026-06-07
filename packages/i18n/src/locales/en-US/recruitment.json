@@ -1,0 +1,15 @@
+{
+  "title": "Recruitment",
+  "vacancy": "Vacancy",
+  "vacancyCode": "Vacancy Code",
+  "quantity": "Headcount",
+  "open": "Open",
+  "close": "Close",
+  "status": {
+    "draft": "Draft",
+    "open": "Open",
+    "on_hold": "On Hold",
+    "closed": "Closed",
+    "cancelled": "Cancelled"
+  }
+}

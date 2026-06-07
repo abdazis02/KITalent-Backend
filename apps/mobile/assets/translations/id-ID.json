@@ -1,0 +1,24 @@
+{
+  "common": {
+    "appName": "KITalent",
+    "save": "Simpan",
+    "cancel": "Batal"
+  },
+  "auth": {
+    "signIn": "Masuk",
+    "email": "Email",
+    "password": "Kata Sandi",
+    "signInTitle": "Masuk ke KITalent"
+  },
+  "attendance": {
+    "checkIn": "Absen Masuk",
+    "checkOut": "Absen Pulang"
+  },
+  "settings": {
+    "appearance": "Tampilan",
+    "themeSystem": "Mengikuti Sistem",
+    "themeLight": "Mode Terang",
+    "themeDark": "Mode Gelap",
+    "language": "Bahasa"
+  }
+}

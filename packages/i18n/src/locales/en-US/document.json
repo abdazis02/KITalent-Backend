@@ -1,0 +1,10 @@
+{
+  "title": "Documents",
+  "type": "Document Type",
+  "fileName": "File Name",
+  "owner": "Owner",
+  "expiryDate": "Expiry Date",
+  "upload": "Upload",
+  "download": "Download",
+  "uploadSuccess": "Document uploaded successfully"
+}

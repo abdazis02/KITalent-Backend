@@ -1,0 +1,8 @@
+{
+  "title": "Perusahaan",
+  "branch": "Cabang",
+  "workLocation": "Lokasi Kerja",
+  "geofence": "Geofence",
+  "taxNumber": "NPWP",
+  "address": "Alamat"
+}

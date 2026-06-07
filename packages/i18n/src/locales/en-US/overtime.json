@@ -1,0 +1,17 @@
+{
+  "title": "Overtime",
+  "request": "Request Overtime",
+  "date": "Date",
+  "startTime": "Start Time",
+  "endTime": "End Time",
+  "duration": "Duration",
+  "reason": "Reason",
+  "pay": "Overtime Pay",
+  "status": {
+    "submitted": "Submitted",
+    "waiting_approval": "Waiting Approval",
+    "approved": "Approved",
+    "rejected": "Rejected",
+    "cancelled": "Cancelled"
+  }
+}

@@ -1,0 +1,14 @@
+{
+  "title": "Persetujuan",
+  "workflow": "Alur Persetujuan",
+  "step": "Tahap",
+  "approver": "Penyetuju",
+  "approve": "Setujui",
+  "reject": "Tolak",
+  "status": {
+    "pending": "Menunggu",
+    "approved": "Disetujui",
+    "rejected": "Ditolak",
+    "cancelled": "Dibatalkan"
+  }
+}

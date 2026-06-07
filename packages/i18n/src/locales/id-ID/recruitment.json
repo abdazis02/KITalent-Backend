@@ -1,0 +1,15 @@
+{
+  "title": "Rekrutmen",
+  "vacancy": "Lowongan",
+  "vacancyCode": "Kode Lowongan",
+  "quantity": "Jumlah Dibutuhkan",
+  "open": "Buka",
+  "close": "Tutup",
+  "status": {
+    "draft": "Draf",
+    "open": "Dibuka",
+    "on_hold": "Ditahan",
+    "closed": "Ditutup",
+    "cancelled": "Dibatalkan"
+  }
+}

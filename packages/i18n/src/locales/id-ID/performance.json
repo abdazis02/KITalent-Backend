@@ -1,0 +1,19 @@
+{
+  "title": "Performa",
+  "review": "Penilaian",
+  "period": "Periode",
+  "kpi": "KPI",
+  "weight": "Bobot",
+  "score": "Skor",
+  "overallScore": "Skor Keseluruhan",
+  "submit": "Kirim",
+  "publish": "Publikasikan",
+  "status": {
+    "draft": "Draf",
+    "in_review": "Dalam Tinjauan",
+    "submitted": "Dikirim",
+    "approved": "Disetujui",
+    "published": "Dipublikasikan",
+    "archived": "Diarsipkan"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "title": "Placement",
+  "position": "Position",
+  "location": "Location",
+  "supervisor": "Supervisor",
+  "activate": "Activate",
+  "complete": "Complete",
+  "requestReplacement": "Request Replacement",
+  "status": {
+    "draft": "Draft",
+    "waiting_approval": "Waiting Approval",
+    "active": "Active",
+    "on_hold": "On Hold",
+    "replacement_requested": "Replacement Requested",
+    "replaced": "Replaced",
+    "completed": "Completed",
+    "cancelled": "Cancelled"
+  }
+}

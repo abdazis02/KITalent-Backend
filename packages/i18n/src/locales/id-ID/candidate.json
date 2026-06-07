@@ -1,0 +1,23 @@
+{
+  "title": "Kandidat",
+  "source": "Sumber",
+  "cv": "CV",
+  "move": "Pindahkan Tahap",
+  "convert": "Jadikan Karyawan",
+  "blacklist": "Masukkan Blacklist",
+  "stage": {
+    "applied": "Melamar",
+    "screening": "Seleksi Berkas",
+    "shortlisted": "Lolos Seleksi",
+    "interview_scheduled": "Jadwal Interview",
+    "interviewed": "Sudah Interview",
+    "assessment": "Asesmen",
+    "mcu": "MCU",
+    "background_check": "Cek Latar Belakang",
+    "offering": "Penawaran",
+    "accepted": "Diterima",
+    "rejected": "Ditolak",
+    "onboarding": "Onboarding",
+    "hired": "Direkrut"
+  }
+}

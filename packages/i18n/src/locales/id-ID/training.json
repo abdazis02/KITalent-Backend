@@ -1,0 +1,22 @@
+{
+  "title": "Pelatihan",
+  "trainer": "Pengajar",
+  "schedule": "Jadwal",
+  "enroll": "Daftarkan",
+  "certificate": "Sertifikat",
+  "certificateExpiry": "Masa Berlaku Sertifikat",
+  "expiringCerts": "Sertifikat Akan Kedaluwarsa",
+  "status": {
+    "planned": "Direncanakan",
+    "ongoing": "Berlangsung",
+    "completed": "Selesai",
+    "cancelled": "Dibatalkan"
+  },
+  "enrollment": {
+    "enrolled": "Terdaftar",
+    "attended": "Hadir",
+    "passed": "Lulus",
+    "failed": "Tidak Lulus",
+    "no_show": "Tidak Hadir"
+  }
+}

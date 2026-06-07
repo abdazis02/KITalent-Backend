@@ -1,0 +1,15 @@
+{
+  "title": "Reimbursement",
+  "category": "Kategori",
+  "amount": "Jumlah",
+  "receipt": "Bukti/Struk",
+  "pay": "Bayar",
+  "status": {
+    "submitted": "Diajukan",
+    "waiting_approval": "Menunggu Persetujuan",
+    "approved": "Disetujui",
+    "rejected": "Ditolak",
+    "paid": "Dibayar",
+    "cancelled": "Dibatalkan"
+  }
+}

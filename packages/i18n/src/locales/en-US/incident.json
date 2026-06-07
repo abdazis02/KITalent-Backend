@@ -1,0 +1,21 @@
+{
+  "title": "Incident",
+  "category": "Category",
+  "severity": "Severity",
+  "sanction": "Sanction",
+  "investigate": "Investigate",
+  "resolve": "Resolve",
+  "dismiss": "Dismiss",
+  "severityLevels": {
+    "low": "Low",
+    "medium": "Medium",
+    "high": "High"
+  },
+  "status": {
+    "reported": "Reported",
+    "investigating": "Investigating",
+    "action_taken": "Action Taken",
+    "resolved": "Resolved",
+    "dismissed": "Dismissed"
+  }
+}

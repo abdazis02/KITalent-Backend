@@ -1,0 +1,26 @@
+{
+  "title": "Invoice",
+  "invoiceNo": "Invoice Number",
+  "client": "Client",
+  "issueDate": "Issue Date",
+  "dueDate": "Due Date",
+  "subtotal": "Subtotal",
+  "tax": "Tax (VAT)",
+  "discount": "Discount",
+  "total": "Total Amount",
+  "paid": "Paid",
+  "managementFee": "Management Fee",
+  "send": "Send Invoice",
+  "recordPayment": "Record Payment",
+  "status": {
+    "draft": "Draft",
+    "waiting_approval": "Waiting Approval",
+    "approved": "Approved",
+    "sent": "Sent",
+    "partially_paid": "Partially Paid",
+    "paid": "Paid",
+    "overdue": "Overdue",
+    "cancelled": "Cancelled",
+    "void": "Void"
+  }
+}

@@ -1,0 +1,15 @@
+{
+  "title": "Settings",
+  "appearance": "Appearance",
+  "theme": "Theme",
+  "themeSystem": "Follow System",
+  "themeLight": "Light Mode",
+  "themeDark": "Dark Mode",
+  "language": "Language",
+  "languageIndonesian": "Bahasa Indonesia",
+  "languageEnglish": "English",
+  "profile": "Profile",
+  "security": "Security",
+  "notifications": "Notifications",
+  "preferencesSaved": "Preferences saved successfully"
+}

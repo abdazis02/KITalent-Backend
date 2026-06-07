@@ -1,0 +1,22 @@
+{
+  "title": "Aset & Seragam",
+  "code": "Kode Aset",
+  "category": "Kategori",
+  "serialNumber": "Nomor Seri",
+  "assign": "Tugaskan",
+  "return": "Kembalikan",
+  "history": "Riwayat",
+  "condition": {
+    "good": "Baik",
+    "damaged": "Rusak",
+    "lost": "Hilang"
+  },
+  "status": {
+    "available": "Tersedia",
+    "assigned": "Dipinjam",
+    "returned": "Dikembalikan",
+    "damaged": "Rusak",
+    "lost": "Hilang",
+    "retired": "Tidak Dipakai"
+  }
+}
