@@ -35,7 +35,21 @@
     "quickActions": "Aksi Cepat"
   },
   "leaves": {
-    "days": "{} hari"
+    "days": "{} hari",
+    "newRequest": "Ajukan Cuti",
+    "type": "Jenis Cuti",
+    "start": "Mulai",
+    "end": "Selesai",
+    "reason": "Alasan",
+    "submit": "Kirim Pengajuan",
+    "submitted": "Pengajuan cuti terkirim",
+    "selectType": "Pilih jenis cuti",
+    "reasonRequired": "Alasan wajib diisi",
+    "fillAll": "Lengkapi jenis dan tanggal"
+  },
+  "notifications": {
+    "title": "Notifikasi",
+    "markAll": "Tandai semua"
   },
   "approvals": {
     "empty": "Tidak ada persetujuan menunggu",

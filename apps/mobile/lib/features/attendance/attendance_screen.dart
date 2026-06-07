@@ -3,6 +3,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/account/me_provider.dart';
 import '../../core/network/dio_client.dart';
@@ -72,7 +73,7 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             const SizedBox(height: 16),
-            const Icon(Icons.fingerprint, size: 72),
+            Icon(PhosphorIconsFill.fingerprint, size: 80, color: Theme.of(context).colorScheme.primary),
             const SizedBox(height: 12),
             employee.when(
               loading: () => const Center(child: Text('…')),
@@ -86,14 +87,14 @@ class _AttendanceScreenState extends ConsumerState<AttendanceScreen> {
             const Spacer(),
             FilledButton.icon(
               onPressed: _busy ? null : () => _punch('check-in'),
-              icon: const Icon(Icons.login),
+              icon: const Icon(PhosphorIconsBold.signIn),
               label: Text('attendance.checkIn'.tr()),
               style: FilledButton.styleFrom(minimumSize: const Size.fromHeight(52)),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
               onPressed: _busy ? null : () => _punch('check-out'),
-              icon: const Icon(Icons.logout),
+              icon: const Icon(PhosphorIconsBold.signOut),
               label: Text('attendance.checkOut'.tr()),
               style: OutlinedButton.styleFrom(minimumSize: const Size.fromHeight(52)),
             ),

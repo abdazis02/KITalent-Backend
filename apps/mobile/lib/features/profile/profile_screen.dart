@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/account/me_provider.dart';
 import '../../core/auth/auth_controller.dart';
@@ -65,7 +66,7 @@ class ProfileScreen extends ConsumerWidget {
             padding: const EdgeInsets.all(16),
             child: OutlinedButton.icon(
               onPressed: () => ref.read(authControllerProvider.notifier).logout(),
-              icon: const Icon(Icons.logout),
+              icon: const Icon(PhosphorIconsBold.signOut),
               label: Text('auth.signOut'.tr()),
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size.fromHeight(48),

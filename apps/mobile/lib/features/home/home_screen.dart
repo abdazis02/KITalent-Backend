@@ -2,9 +2,11 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/account/me_provider.dart';
 import '../../core/router/app_router.dart';
+import '../../shared/widgets/app_logo.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -14,7 +16,16 @@ class HomeScreen extends ConsumerWidget {
     final me = ref.watch(meProvider);
 
     return Scaffold(
-      appBar: AppBar(title: Text('nav.home'.tr())),
+      appBar: AppBar(
+        title: const AppLogo(size: 30, withWordmark: true),
+        actions: [
+          IconButton(
+            icon: const Icon(PhosphorIconsRegular.bell),
+            tooltip: 'notifications.title'.tr(),
+            onPressed: () => context.push(Routes.notifications),
+          ),
+        ],
+      ),
       body: RefreshIndicator(
         // Manual refresh (rule #1) — pull down to refetch.
         onRefresh: () => ref.refresh(meProvider.future),
@@ -23,7 +34,7 @@ class HomeScreen extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           children: [
             me.when(
-              loading: () => const _GreetingSkeleton(),
+              loading: () => Text('home.greeting'.tr(), style: Theme.of(context).textTheme.titleLarge),
               error: (_, __) => Text('home.greeting'.tr()),
               data: (u) => Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -35,20 +46,20 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
             const SizedBox(height: 24),
-            Text('home.quickActions'.tr(), style: Theme.of(context).textTheme.titleMedium),
+            Text('home.quickActions'.tr(), style: Theme.of(context).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.w700)),
             const SizedBox(height: 12),
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              mainAxisSpacing: 12,
-              crossAxisSpacing: 12,
-              childAspectRatio: 1.5,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: 1.45,
               children: [
-                _ActionCard(icon: Icons.fingerprint, label: 'nav.attendance'.tr(), onTap: () => context.go(Routes.attendance)),
-                _ActionCard(icon: Icons.event_busy, label: 'nav.leaves'.tr(), onTap: () => context.go(Routes.leaves)),
-                _ActionCard(icon: Icons.receipt_long, label: 'nav.payslips'.tr(), onTap: () => context.go(Routes.payslips)),
-                _ActionCard(icon: Icons.checklist, label: 'nav.approvals'.tr(), onTap: () => context.go(Routes.approvals)),
+                _ActionCard(icon: PhosphorIconsFill.fingerprint, color: const Color(0xFF2E5A9E), label: 'nav.attendance'.tr(), onTap: () => context.go(Routes.attendance)),
+                _ActionCard(icon: PhosphorIconsFill.calendarX, color: const Color(0xFFE8920C), label: 'nav.leaves'.tr(), onTap: () => context.go(Routes.leaves)),
+                _ActionCard(icon: PhosphorIconsFill.receipt, color: const Color(0xFF22A06B), label: 'nav.payslips'.tr(), onTap: () => context.go(Routes.payslips)),
+                _ActionCard(icon: PhosphorIconsFill.listChecks, color: const Color(0xFF7C3AED), label: 'nav.approvals'.tr(), onTap: () => context.go(Routes.approvals)),
               ],
             ),
           ],
@@ -59,15 +70,15 @@ class HomeScreen extends ConsumerWidget {
 }
 
 class _ActionCard extends StatelessWidget {
-  const _ActionCard({required this.icon, required this.label, required this.onTap});
+  const _ActionCard({required this.icon, required this.color, required this.label, required this.onTap});
   final IconData icon;
+  final Color color;
   final String label;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return Card(
-      clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
@@ -76,24 +87,17 @@ class _ActionCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(icon, size: 28, color: Theme.of(context).colorScheme.primary),
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(color: color.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(12)),
+                child: Icon(icon, size: 26, color: color),
+              ),
               const Spacer(),
-              Text(label, style: const TextStyle(fontWeight: FontWeight.w600)),
+              Text(label, style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 15)),
             ],
           ),
         ),
       ),
-    );
-  }
-}
-
-class _GreetingSkeleton extends StatelessWidget {
-  const _GreetingSkeleton();
-  @override
-  Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.centerLeft,
-      child: Text('home.greeting'.tr(), style: Theme.of(context).textTheme.titleLarge),
     );
   }
 }

@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 240" fill="none">
+  <defs>
+    <linearGradient id="kitGrad" x1="48" y1="28" x2="196" y2="212" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#5A86C4"/>
+      <stop offset="1" stop-color="#274F8C"/>
+    </linearGradient>
+  </defs>
+  <!-- Upper chevron band -->
+  <path fill="url(#kitGrad)" d="M120 24 L206 78 L206 104 L120 50 L34 104 L34 78 Z"/>
+  <!-- White outlined chevron inside the upper band -->
+  <path stroke="#FFFFFF" stroke-width="15" stroke-linejoin="round" stroke-linecap="round"
+        d="M72 96 L120 60 L168 96"/>
+  <!-- Lower solid chevron banner (V-notch bottom / tails) -->
+  <path fill="url(#kitGrad)" d="M120 112 L206 166 L206 196 L120 148 L34 196 L34 166 Z"/>
+</svg>

@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/network/dio_client.dart';
 import '../../shared/widgets/skeleton.dart';
@@ -62,7 +63,7 @@ class PayslipsScreen extends ConsumerWidget {
               itemBuilder: (context, i) {
                 final s = items[i];
                 return ListTile(
-                  leading: const CircleAvatar(child: Icon(Icons.receipt_long)),
+                  leading: const CircleAvatar(child: Icon(PhosphorIconsFill.receipt)),
                   title: Text(s.period, style: const TextStyle(fontWeight: FontWeight.w600)),
                   subtitle: Text(rupiah.format(s.netSalary)),
                   trailing: StatusChip(status: s.status),

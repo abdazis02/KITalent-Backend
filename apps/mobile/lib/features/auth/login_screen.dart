@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/auth/auth_controller.dart';
+import '../../shared/widgets/app_logo.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -68,8 +69,18 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     const SizedBox(height: 8),
-                    Text('KITalent', textAlign: TextAlign.center, style: Theme.of(context).textTheme.headlineMedium?.copyWith(fontWeight: FontWeight.bold)),
-                    const SizedBox(height: 4),
+                    const Center(child: AppLogo(size: 84)),
+                    const SizedBox(height: 12),
+                    Center(
+                      child: Text.rich(
+                        TextSpan(children: [
+                          TextSpan(text: 'KIT', style: TextStyle(fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.primary)),
+                          TextSpan(text: 'alent', style: TextStyle(fontWeight: FontWeight.w800, color: Theme.of(context).colorScheme.onSurface)),
+                        ]),
+                        style: const TextStyle(fontSize: 26),
+                      ),
+                    ),
+                    const SizedBox(height: 2),
                     Text('auth.signInTitle'.tr(), textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodyMedium),
                     const SizedBox(height: 28),
                     TextFormField(

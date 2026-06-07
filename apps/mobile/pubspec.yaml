@@ -17,6 +17,10 @@ dependencies:
   flutter_riverpod: ^2.5.1
   go_router: ^14.2.7
 
+  # Branding & iconography
+  flutter_svg: ^2.0.10+1
+  phosphor_flutter: ^2.1.0
+
   # Networking & storage
   dio: ^5.7.0
   flutter_secure_storage: ^9.2.2
@@ -41,8 +45,20 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.14.1
+  image: ^4.2.0
 
 flutter:
   uses-material-design: true
   assets:
     - assets/translations/
+    - assets/logo/
+
+# App launcher icon — the logo mark only (no wordmark), per brand guidance.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  remove_alpha_ios: true
+  image_path: "assets/logo/app_icon.png"
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/logo/app_icon.png"

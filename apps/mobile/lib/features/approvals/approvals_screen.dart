@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/network/dio_client.dart';
 import '../../shared/widgets/skeleton.dart';
@@ -97,14 +98,14 @@ class ApprovalsScreen extends ConsumerWidget {
                           children: [
                             OutlinedButton.icon(
                               onPressed: () => _act(context, ref, item, 'reject'),
-                              icon: const Icon(Icons.close, size: 18),
+                              icon: const Icon(PhosphorIconsBold.x, size: 18),
                               label: Text('approvals.reject'.tr()),
                               style: OutlinedButton.styleFrom(foregroundColor: Theme.of(context).colorScheme.error),
                             ),
                             const SizedBox(width: 8),
                             FilledButton.icon(
                               onPressed: () => _act(context, ref, item, 'approve'),
-                              icon: const Icon(Icons.check, size: 18),
+                              icon: const Icon(PhosphorIconsBold.check, size: 18),
                               label: Text('approvals.approve'.tr()),
                             ),
                           ],

@@ -35,7 +35,21 @@
     "quickActions": "Quick Actions"
   },
   "leaves": {
-    "days": "{} day(s)"
+    "days": "{} day(s)",
+    "newRequest": "Request Leave",
+    "type": "Leave Type",
+    "start": "Start",
+    "end": "End",
+    "reason": "Reason",
+    "submit": "Submit Request",
+    "submitted": "Leave request submitted",
+    "selectType": "Select a leave type",
+    "reasonRequired": "Reason is required",
+    "fillAll": "Complete the type and dates"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAll": "Mark all"
   },
   "approvals": {
     "empty": "No pending approvals",

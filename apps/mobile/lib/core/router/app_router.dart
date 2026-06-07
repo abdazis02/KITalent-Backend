@@ -8,6 +8,8 @@ import '../../features/attendance/attendance_screen.dart';
 import '../../features/auth/login_screen.dart';
 import '../../features/home/home_screen.dart';
 import '../../features/leave/leaves_screen.dart';
+import '../../features/leave/leave_request_screen.dart';
+import '../../features/notifications/notifications_screen.dart';
 import '../../features/payslip/payslips_screen.dart';
 import '../../features/profile/profile_screen.dart';
 import '../../features/shell/app_shell.dart';
@@ -22,6 +24,8 @@ class Routes {
   static const payslips = '/payslips';
   static const approvals = '/approvals';
   static const profile = '/profile';
+  static const leaveNew = '/leaves/new';
+  static const notifications = '/notifications';
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -59,6 +63,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           GoRoute(path: Routes.profile, builder: (_, __) => const ProfileScreen()),
         ],
       ),
+      // Full-screen pushed routes (outside the bottom-nav shell).
+      GoRoute(path: Routes.leaveNew, builder: (_, __) => const LeaveRequestScreen()),
+      GoRoute(path: Routes.notifications, builder: (_, __) => const NotificationsScreen()),
     ],
   );
 });

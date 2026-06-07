@@ -1,9 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../core/network/dio_client.dart';
 import '../../core/pagination/paged_list_controller.dart';
+import '../../core/router/app_router.dart';
 import '../../shared/widgets/paginated_list_view.dart';
 import '../../shared/widgets/status_chip.dart';
 
@@ -47,6 +50,11 @@ class LeavesScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(title: Text('nav.leaves'.tr())),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () => context.push(Routes.leaveNew),
+        icon: const Icon(PhosphorIconsBold.plus),
+        label: Text('leaves.newRequest'.tr()),
+      ),
       body: Column(
         children: [
           Padding(

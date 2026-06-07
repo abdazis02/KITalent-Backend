@@ -21,6 +21,13 @@ export class LeavesController {
     return this.service.list(tenantId, query);
   }
 
+  @Get('types')
+  @RequirePermissions('leave.read.own')
+  @ApiOperation({ summary: 'List active leave types (for the request form)' })
+  listTypes(@CurrentTenant() tenantId: string | null) {
+    return this.service.listTypes(tenantId);
+  }
+
   @Post()
   @RequirePermissions('leave.create.own')
   @ApiOperation({ summary: 'Submit a leave request' })

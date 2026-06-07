@@ -80,6 +80,16 @@ export class LeavesService {
     return request;
   }
 
+  /** Active leave types for the request form (PRD §10.14). */
+  listTypes(tenantId: string | null) {
+    const tid = this.requireTenant(tenantId);
+    return this.prisma.leaveType.findMany({
+      where: { tenantId: tid, deletedAt: null, isActive: true },
+      orderBy: { name: 'asc' },
+      select: { id: true, code: true, name: true, isPaid: true, defaultQuota: true },
+    });
+  }
+
   async list(tenantId: string | null, query: QueryLeaveDto): Promise<Paginated<unknown>> {
     const tid = this.requireTenant(tenantId);
     const { page, pageSize } = normalizePagination(query);
