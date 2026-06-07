@@ -10,14 +10,47 @@ import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { NotificationBell } from '@/components/notification-bell';
 
-const NAV = [
-  { href: '/dashboard', key: 'dashboard' },
-  { href: '/employees', key: 'employees' },
-  { href: '/clients', key: 'clients' },
-  { href: '/attendance', key: 'attendance' },
-  { href: '/payroll', key: 'payroll' },
-  { href: '/invoice', key: 'invoice' },
-] as const;
+interface NavItem { href: string; key?: string; label?: string }
+const NAV_GROUPS: { group: string; items: NavItem[] }[] = [
+  { group: 'Utama', items: [{ href: '/dashboard', key: 'dashboard' }] },
+  {
+    group: 'SDM',
+    items: [
+      { href: '/employees', key: 'employees' },
+      { href: '/attendance', key: 'attendance' },
+      { href: '/shifts', key: 'schedule' },
+      { href: '/leave', key: 'leave' },
+      { href: '/overtime', key: 'overtime' },
+      { href: '/payroll', key: 'payroll' },
+      { href: '/reimbursements', label: 'Reimbursement' },
+      { href: '/loans', label: 'Pinjaman' },
+      { href: '/performance', key: 'performance' },
+      { href: '/trainings', label: 'Pelatihan' },
+      { href: '/assets', label: 'Aset' },
+      { href: '/incidents', label: 'Insiden' },
+      { href: '/documents', key: 'documents' },
+    ],
+  },
+  {
+    group: 'Outsourcing',
+    items: [
+      { href: '/clients', key: 'clients' },
+      { href: '/manpower', key: 'manpowerRequest' },
+      { href: '/recruitment', key: 'recruitment' },
+      { href: '/placements', key: 'placement' },
+      { href: '/contracts', label: 'Kontrak' },
+      { href: '/invoice', key: 'invoice' },
+    ],
+  },
+  {
+    group: 'Persetujuan & Laporan',
+    items: [
+      { href: '/approvals', key: 'approvals' },
+      { href: '/reports', key: 'reports' },
+    ],
+  },
+  { group: 'Platform', items: [{ href: '/tenants', label: 'Tenant' }] },
+];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const t = useTranslations('navigation');
@@ -47,23 +80,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen bg-background">
       {/* Sidebar */}
-      <aside className="hidden w-60 shrink-0 border-r border-border bg-card md:flex md:flex-col">
-        <div className="flex h-14 items-center px-5 text-lg font-bold text-card-foreground">KITalent</div>
-        <nav className="flex-1 space-y-0.5 p-3">
-          {NAV.map((item) => {
-            const active = pathname.startsWith(item.href);
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`block rounded-md px-3 py-2 text-sm font-medium transition-colors ${
-                  active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                }`}
-              >
-                {t(item.key)}
-              </Link>
-            );
-          })}
+      <aside className="hidden w-60 shrink-0 flex-col border-r border-border bg-card md:flex">
+        <div className="flex h-14 shrink-0 items-center px-5 text-lg font-bold text-card-foreground">KITalent</div>
+        <nav className="flex-1 space-y-4 overflow-y-auto p-3">
+          {NAV_GROUPS.map((grp) => (
+            <div key={grp.group} className="space-y-0.5">
+              <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground/70">{grp.group}</div>
+              {grp.items.map((item) => {
+                const active = pathname.startsWith(item.href);
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className={`block rounded-md px-3 py-2 text-sm font-medium transition-colors ${
+                      active ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                    }`}
+                  >
+                    {item.key ? t(item.key) : item.label}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </nav>
       </aside>
 
