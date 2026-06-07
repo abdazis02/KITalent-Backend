@@ -16,6 +16,7 @@ import { api } from '@/lib/api-client';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { NotificationBell } from '@/components/notification-bell';
+import { BrandMark } from '@/components/brand-mark';
 
 interface NavItem { href: string; key?: string; label?: string; Icon: LucideIcon }
 const NAV_GROUPS: { group: string; items: NavItem[] }[] = [
@@ -90,7 +91,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
   const SidebarContent = (
     <>
       <div className="flex h-16 shrink-0 items-center gap-2.5 px-5">
-        <span className="grid h-9 w-9 place-items-center rounded-lg bg-sidebar-accent font-black text-white shadow-sm">K</span>
+        <BrandMark size={34} />
         <div className="leading-tight">
           <div className="text-sm font-bold text-white">KITalent</div>
           <div className="text-[10px] text-sidebar-muted">By Kamunara</div>

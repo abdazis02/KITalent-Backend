@@ -8,6 +8,7 @@ import { api } from '@/lib/api-client';
 import { auth } from '@/lib/auth';
 import { ThemeToggle } from '@/components/theme-toggle';
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { BrandMark } from '@/components/brand-mark';
 
 const DEFAULT_TENANT = process.env.NEXT_PUBLIC_DEFAULT_TENANT_ID ?? '11111111-1111-4111-8111-111111111111';
 
@@ -43,7 +44,7 @@ export default function LoginPage() {
       <div className="relative hidden w-1/2 flex-col justify-between bg-sidebar p-12 text-white lg:flex">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-transparent" />
         <div className="relative flex items-center gap-3">
-          <span className="grid h-11 w-11 place-items-center rounded-xl bg-white/15 text-xl font-black">K</span>
+          <BrandMark size={44} />
           <div>
             <div className="text-xl font-bold">KITalent</div>
             <div className="text-xs text-white/60">By Kamunara</div>
