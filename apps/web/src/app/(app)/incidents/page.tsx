@@ -1,9 +1,10 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useServerTable } from '@/hooks/use-server-table';
-import { DataTable, type Column } from '@/components/data-table/data-table';
+import { type Column } from '@/components/data-table/data-table';
+import { ResourceManager } from '@/components/crud/resource-manager';
 import { StatusBadge } from '@/components/status-badge';
+import type { FieldDef } from '@/components/form/form-dialog';
 
 interface Incident {
   id: string;
@@ -13,10 +14,10 @@ interface Incident {
   createdAt: string;
 }
 
+const SEVERITIES = ['low', 'medium', 'high', 'critical'];
+
 export default function IncidentsPage() {
   const tc = useTranslations('common');
-
-  const table = useServerTable<Incident>({ endpoint: '/incidents', queryKey: ['incidents'] });
 
   const columns: Column<Incident>[] = [
     { key: 'title', header: 'Judul', render: (r) => <span className="font-medium">{r.title}</span> },
@@ -25,10 +26,16 @@ export default function IncidentsPage() {
     { key: 'status', header: tc('status'), render: (r) => <StatusBadge value={r.status} /> },
   ];
 
+  const fields: FieldDef[] = [
+    { name: 'employeeId', label: 'Karyawan', required: true, ref: { endpoint: '/employees', labelKey: 'fullName' } },
+    { name: 'category', label: 'Kategori', required: true },
+    { name: 'severity', label: 'Tingkat', options: SEVERITIES.map((s) => ({ value: s, label: s })) },
+    { name: 'title', label: 'Judul', required: true },
+    { name: 'description', label: 'Deskripsi', type: 'textarea' },
+    { name: 'incidentDate', label: 'Tanggal Kejadian', type: 'date', required: true },
+  ];
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-foreground">Insiden</h1>
-      <DataTable table={table} columns={columns} getRowId={(r) => r.id} />
-    </div>
+    <ResourceManager<Incident> title="Insiden" endpoint="/incidents" queryKey={['incidents']} columns={columns} fields={fields} canEdit={false} />
   );
 }

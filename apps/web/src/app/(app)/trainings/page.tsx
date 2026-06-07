@@ -1,34 +1,39 @@
 'use client';
 
 import { useTranslations } from 'next-intl';
-import { useServerTable } from '@/hooks/use-server-table';
-import { DataTable, type Column } from '@/components/data-table/data-table';
+import { type Column } from '@/components/data-table/data-table';
+import { ResourceManager } from '@/components/crud/resource-manager';
 import { StatusBadge } from '@/components/status-badge';
+import type { FieldDef } from '@/components/form/form-dialog';
 
 interface Training {
   id: string;
+  code: string | null;
   title: string;
-  startDate: string | null;
-  endDate: string | null;
+  scheduledAt: string | null;
   status: string;
 }
 
 export default function TrainingsPage() {
   const tc = useTranslations('common');
 
-  const table = useServerTable<Training>({ endpoint: '/trainings', queryKey: ['trainings'] });
-
   const columns: Column<Training>[] = [
+    { key: 'code', header: 'Kode', render: (r) => r.code ?? '—' },
     { key: 'title', header: 'Judul', render: (r) => <span className="font-medium">{r.title}</span> },
-    { key: 'startDate', header: 'Mulai', render: (r) => r.startDate?.slice(0, 10) ?? '—' },
-    { key: 'endDate', header: 'Selesai', render: (r) => r.endDate?.slice(0, 10) ?? '—' },
+    { key: 'scheduledAt', header: 'Jadwal', render: (r) => r.scheduledAt?.slice(0, 10) ?? '—' },
     { key: 'status', header: tc('status'), render: (r) => <StatusBadge value={r.status} /> },
   ];
 
+  const fields: FieldDef[] = [
+    { name: 'code', label: 'Kode', required: true },
+    { name: 'title', label: 'Judul', required: true },
+    { name: 'description', label: 'Deskripsi', type: 'textarea' },
+    { name: 'trainer', label: 'Pelatih' },
+    { name: 'location', label: 'Lokasi' },
+    { name: 'scheduledAt', label: 'Jadwal', type: 'date' },
+  ];
+
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-foreground">Pelatihan</h1>
-      <DataTable table={table} columns={columns} getRowId={(r) => r.id} />
-    </div>
+    <ResourceManager<Training> title="Pelatihan" endpoint="/trainings" queryKey={['trainings']} columns={columns} fields={fields} canEdit={false} />
   );
 }

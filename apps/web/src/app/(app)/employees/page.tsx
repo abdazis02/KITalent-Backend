@@ -1,10 +1,12 @@
 'use client';
 
-import { useTranslations } from 'next-intl';
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { EMPLOYEE_STATUSES } from '@kitalent/types';
-import { useServerTable } from '@/hooks/use-server-table';
-import { DataTable, type Column } from '@/components/data-table/data-table';
+import { type Column } from '@/components/data-table/data-table';
+import { ResourceManager } from '@/components/crud/resource-manager';
+import { StatusBadge } from '@/components/status-badge';
+import type { FieldDef } from '@/components/form/form-dialog';
 
 interface Employee {
   id: string;
@@ -12,77 +14,54 @@ interface Employee {
   fullName: string;
   status: string;
   email: string | null;
-  nik: string | null;
-  basicSalary: number | null;
-  createdAt: string;
+  phone: string | null;
 }
+
+const EMPLOYMENT_TYPES = ['permanent', 'contract', 'outsourcing', 'daily', 'internship'];
 
 export default function EmployeesPage() {
   const t = useTranslations('navigation');
   const tc = useTranslations('common');
   const [status, setStatus] = useState('');
 
-  const table = useServerTable<Employee>({
-    endpoint: '/employees',
-    queryKey: ['employees'],
-    initialSortBy: 'employeeNo',
-    initialSortOrder: 'asc',
-    filters: { status: status || undefined },
-  });
-
   const columns: Column<Employee>[] = [
     { key: 'employeeNo', header: 'NIP', sortable: true, render: (r) => <span className="font-medium">{r.employeeNo}</span> },
     { key: 'fullName', header: t('employees'), sortable: true, render: (r) => r.fullName },
     { key: 'email', header: 'Email', render: (r) => r.email ?? '—' },
-    {
-      key: 'nik',
-      header: 'NIK',
-      // Masked to null by the API unless the user holds employee.read.sensitive.
-      render: (r) => r.nik ?? <span className="text-muted-foreground">••••••</span>,
-    },
-    {
-      key: 'status',
-      header: tc('status'),
-      sortable: true,
-      render: (r) => <StatusBadge value={r.status} />,
-    },
+    { key: 'phone', header: 'Telepon', render: (r) => r.phone ?? '—' },
+    { key: 'status', header: tc('status'), sortable: true, render: (r) => <StatusBadge value={r.status} /> },
+  ];
+
+  const fields: FieldDef[] = [
+    { name: 'employeeNo', label: 'NIP', required: true },
+    { name: 'fullName', label: 'Nama Lengkap', required: true },
+    { name: 'email', label: 'Email', type: 'email' },
+    { name: 'phone', label: 'Telepon' },
+    { name: 'status', label: tc('status'), options: (EMPLOYEE_STATUSES as readonly string[]).map((s) => ({ value: s, label: s })) },
+    { name: 'employmentType', label: 'Tipe Kepegawaian', options: EMPLOYMENT_TYPES.map((s) => ({ value: s, label: s })) },
+    { name: 'gender', label: 'Jenis Kelamin', options: [{ value: 'male', label: 'Laki-laki' }, { value: 'female', label: 'Perempuan' }] },
+    { name: 'birthDate', label: 'Tanggal Lahir', type: 'date' },
+    { name: 'joinDate', label: 'Tanggal Masuk', type: 'date' },
+    { name: 'supervisorId', label: 'Atasan Langsung', ref: { endpoint: '/employees', labelKey: 'fullName' } },
   ];
 
   return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold text-foreground">{t('employees')}</h1>
-      <DataTable
-        table={table}
-        columns={columns}
-        getRowId={(r) => r.id}
-        toolbar={
-          <select
-            value={status}
-            onChange={(e) => {
-              setStatus(e.target.value);
-              table.setPage(1);
-            }}
-            className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground"
-          >
-            <option value="">{tc('all')}</option>
-            {EMPLOYEE_STATUSES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
-          </select>
-        }
-      />
-    </div>
+    <ResourceManager<Employee>
+      title={t('employees')}
+      endpoint="/employees"
+      queryKey={['employees']}
+      initialSortBy="employeeNo"
+      initialSortOrder="asc"
+      filters={{ status: status || undefined }}
+      columns={columns}
+      fields={fields}
+      canDelete
+      toolbar={
+        <select value={status} onChange={(e) => setStatus(e.target.value)} className="h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground">
+          <option value="">{tc('all')}</option>
+          {(EMPLOYEE_STATUSES as readonly string[]).map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
+      }
+    />
   );
-}
-
-function StatusBadge({ value }: { value: string }) {
-  const tone =
-    value === 'active'
-      ? 'bg-success/15 text-success'
-      : value === 'blacklisted' || value === 'terminated'
-        ? 'bg-destructive/15 text-destructive'
-        : 'bg-muted text-muted-foreground';
-  return <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${tone}`}>{value}</span>;
 }

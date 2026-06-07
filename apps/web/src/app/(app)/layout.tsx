@@ -36,6 +36,7 @@ const NAV_GROUPS: { group: string; items: NavItem[] }[] = [
     items: [
       { href: '/clients', key: 'clients' },
       { href: '/manpower', key: 'manpowerRequest' },
+      { href: '/service-categories', label: 'Kategori Layanan' },
       { href: '/recruitment', key: 'recruitment' },
       { href: '/placements', key: 'placement' },
       { href: '/contracts', label: 'Kontrak' },

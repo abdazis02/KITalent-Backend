@@ -2,9 +2,10 @@
 
 import { useTranslations } from 'next-intl';
 import Link from 'next/link';
-import { useServerTable } from '@/hooks/use-server-table';
-import { DataTable, type Column } from '@/components/data-table/data-table';
+import { type Column } from '@/components/data-table/data-table';
+import { ResourceManager } from '@/components/crud/resource-manager';
 import { StatusBadge } from '@/components/status-badge';
+import type { FieldDef } from '@/components/form/form-dialog';
 
 interface Vacancy {
   id: string;
@@ -19,11 +20,6 @@ export default function RecruitmentPage() {
   const tn = useTranslations('navigation');
   const tc = useTranslations('common');
 
-  const table = useServerTable<Vacancy>({
-    endpoint: '/vacancies',
-    queryKey: ['vacancies'],
-  });
-
   const columns: Column<Vacancy>[] = [
     { key: 'code', header: 'Kode', render: (r) => <span className="font-medium">{r.code}</span> },
     { key: 'title', header: 'Posisi', render: (r) => r.title },
@@ -32,13 +28,26 @@ export default function RecruitmentPage() {
     { key: 'status', header: tc('status'), render: (r) => <StatusBadge value={r.status} /> },
   ];
 
+  const fields: FieldDef[] = [
+    { name: 'code', label: 'Kode', required: true },
+    { name: 'title', label: 'Posisi', required: true },
+    { name: 'position', label: 'Jabatan' },
+    { name: 'location', label: 'Lokasi' },
+    { name: 'quantity', label: 'Kuota', type: 'number' },
+    { name: 'clientId', label: 'Klien', ref: { endpoint: '/clients', labelKey: 'name' } },
+    { name: 'description', label: 'Deskripsi', type: 'textarea' },
+    { name: 'requirements', label: 'Persyaratan', type: 'textarea' },
+  ];
+
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-semibold text-foreground">{tn('recruitment')}</h1>
-        <Link href="/candidates" className="text-sm font-medium text-primary hover:underline">Kandidat →</Link>
-      </div>
-      <DataTable table={table} columns={columns} getRowId={(r) => r.id} />
-    </div>
+    <ResourceManager<Vacancy>
+      title={tn('recruitment')}
+      endpoint="/vacancies"
+      queryKey={['vacancies']}
+      columns={columns}
+      fields={fields}
+      canEdit={false}
+      toolbar={<Link href="/candidates" className="text-sm font-medium text-primary hover:underline">Kandidat →</Link>}
+    />
   );
 }
