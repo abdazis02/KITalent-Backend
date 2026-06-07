@@ -4,6 +4,8 @@ import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import configuration from './config/configuration';
 import { CryptoModule } from './common/crypto/crypto.module';
+import { PdfModule } from './common/pdf/pdf.module';
+import { SecurityModule } from './common/security/security.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuditModule } from './modules/audit/audit.module';
 import { AuthModule } from './modules/auth/auth.module';
@@ -56,6 +58,8 @@ import { PermissionGuard } from './common/guards/permission.guard';
     // Global rate limiting (PRD §22): default 120 req/min/IP; auth routes tighten further.
     ThrottlerModule.forRoot([{ ttl: 60_000, limit: 120 }]),
     CryptoModule,
+    PdfModule,
+    SecurityModule,
     PrismaModule,
     AuditModule,
     AuthModule,

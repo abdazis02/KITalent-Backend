@@ -4,9 +4,13 @@ import { buildMeta, normalizePagination, type Paginated } from '@kitalent/shared
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { ApprovalService } from '../approval/approval.service';
+import { PdfService } from '../../common/pdf/pdf.service';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import type { CreateContractDto } from './dto/create-contract.dto';
 import type { QueryContractDto } from './dto/query-contract.dto';
+
+const idr = (n: number): string => `Rp ${Math.round(n).toLocaleString('id-ID')}`;
+const ymd = (d: Date | null | undefined): string => (d ? d.toISOString().slice(0, 10) : '-');
 
 @Injectable()
 export class ContractsService {
@@ -14,7 +18,33 @@ export class ContractsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly approvals: ApprovalService,
+    private readonly pdf: PdfService,
   ) {}
+
+  /** Render a contract as a PDF document (PRD §18 contracts/:id/generate-pdf). */
+  async renderPdf(tenantId: string | null, id: string): Promise<{ buffer: Buffer; filename: string }> {
+    const tid = this.requireTenant(tenantId);
+    const contract = await this.findOne(tid, id);
+    const [employee, client] = await Promise.all([
+      contract.employeeId ? this.prisma.employee.findFirst({ where: { id: contract.employeeId, tenantId: tid }, select: { fullName: true, employeeNo: true } }) : null,
+      contract.clientId ? this.prisma.client.findFirst({ where: { id: contract.clientId, tenantId: tid }, select: { name: true } }) : null,
+    ]);
+    const buffer = await this.pdf.generate({
+      title: 'KONTRAK',
+      subtitle: `${contract.number} — ${contract.title}`,
+      meta: [
+        ['Jenis', contract.type],
+        ['Status', contract.status],
+        ['Mulai', ymd(contract.startDate)],
+        ['Berakhir', ymd(contract.endDate)],
+        ...(employee ? [['Karyawan', `${employee.fullName} (${employee.employeeNo})`] as [string, string]] : []),
+        ...(client ? [['Klien', client.name] as [string, string]] : []),
+        ...(contract.value != null ? [['Nilai', idr(contract.value)] as [string, string]] : []),
+      ],
+      footer: contract.notes ?? undefined,
+    });
+    return { buffer, filename: `${contract.number}.pdf` };
+  }
 
   private requireTenant(tenantId: string | null): string {
     if (!tenantId) throw new ForbiddenException('A tenant context is required');

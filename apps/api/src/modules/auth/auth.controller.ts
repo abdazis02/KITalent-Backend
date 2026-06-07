@@ -39,7 +39,7 @@ export class AuthController {
   @Post('logout')
   @ApiOperation({ summary: 'Revoke the current refresh token' })
   logout(@Body() dto: RefreshDto, @CurrentUser() user: AuthenticatedUser) {
-    return this.auth.logout(user.id, dto.refreshToken, user.tenantId);
+    return this.auth.logout(user.id, dto.refreshToken, user.tenantId, user.jti, user.tokenExp);
   }
 
   @ApiBearerAuth()

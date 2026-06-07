@@ -8,6 +8,7 @@ import * as argon2 from 'argon2';
 import { randomBytes, createHash } from 'node:crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { TokenBlacklistService } from '../../common/security/token-blacklist.service';
 import type { LoginDto } from './dto/login.dto';
 
 interface RequestContext {
@@ -26,6 +27,7 @@ export class AuthService {
     private readonly jwt: JwtService,
     private readonly config: ConfigService,
     private readonly audit: AuditService,
+    private readonly blacklist: TokenBlacklistService,
   ) {}
 
   static hashToken(token: string): string {
@@ -103,13 +105,15 @@ export class AuthService {
     return this.issueTokens(payload.sub, payload.tenantId, payload.email, ctx);
   }
 
-  async logout(userId: string, refreshToken: string | undefined, tenantId: string | null) {
+  async logout(userId: string, refreshToken: string | undefined, tenantId: string | null, accessJti?: string, accessExp?: number) {
     if (refreshToken) {
       await this.prisma.refreshToken.updateMany({
         where: { userId, tokenHash: AuthService.hashToken(refreshToken), revokedAt: null },
         data: { revokedAt: new Date() },
       });
     }
+    // Deny the current access token for its remaining lifetime (PRD §22).
+    if (accessJti && accessExp) this.blacklist.block(accessJti, accessExp - Math.floor(Date.now() / 1000));
     await this.audit.record({ tenantId, actorId: userId, action: 'auth.logout' });
   }
 
@@ -123,10 +127,11 @@ export class AuthService {
     const accessTtl = this.config.get<number>('jwt.accessTtl')!;
     const refreshTtl = this.config.get<number>('jwt.refreshTtl')!;
 
-    const accessToken = await this.jwt.signAsync(payload, {
-      secret: this.config.get<string>('jwt.accessSecret'),
-      expiresIn: accessTtl,
-    });
+    // Access token carries a jti so it can be added to the logout denylist (PRD §22).
+    const accessToken = await this.jwt.signAsync(
+      { ...payload, jti: randomBytes(16).toString('hex') },
+      { secret: this.config.get<string>('jwt.accessSecret'), expiresIn: accessTtl },
+    );
     // Add jitter so two tokens minted in the same second differ.
     const refreshToken = await this.jwt.signAsync(
       { ...payload, jti: randomBytes(16).toString('hex') },

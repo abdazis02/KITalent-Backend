@@ -1,6 +1,7 @@
 import { ForbiddenException, Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { buildMeta, normalizePagination, type Paginated, type PaginationQuery } from '@kitalent/shared';
 import { PrismaService } from '../../prisma/prisma.service';
+import { NotificationChannelsService, type ChannelName } from './notification-channels.service';
 
 export interface NotifyInput {
   tenantId?: string | null;
@@ -9,6 +10,8 @@ export interface NotifyInput {
   title: string;
   body?: string;
   data?: Record<string, unknown>;
+  /** Extra outbound channels beyond in-app (PRD §10.28), e.g. ['email','fcm']. */
+  channels?: ChannelName[];
 }
 
 /**
@@ -19,7 +22,10 @@ export interface NotifyInput {
 export class NotificationService {
   private readonly logger = new Logger(NotificationService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly channels: NotificationChannelsService,
+  ) {}
 
   async notify(input: NotifyInput): Promise<void> {
     try {
@@ -36,6 +42,10 @@ export class NotificationService {
     } catch (err) {
       // Never let a notification failure break the primary operation.
       this.logger.error(`Failed to create notification "${input.event}"`, err as Error);
+    }
+    // Fan out to any requested external channels (email/whatsapp/fcm).
+    if (input.channels?.length) {
+      await this.channels.dispatch(input.channels, { recipientUserId: input.recipientUserId, title: input.title, body: input.body, data: input.data });
     }
   }
 

@@ -1,12 +1,16 @@
 import { Module } from '@nestjs/common';
-import { BadRequestException, Controller, ForbiddenException, Get, Header, Injectable, NotFoundException, Post, Query, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, ForbiddenException, Get, Header, Injectable, NotFoundException, Param, ParseUUIDPipe, Post, Query, Res, StreamableFile, UploadedFile, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { PdfService } from '../../common/pdf/pdf.service';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser, type AuthenticatedUser } from '../../common/decorators/current-user.decorator';
+
+const idrFmt = (n: number): string => `Rp ${Math.round(n).toLocaleString('id-ID')}`;
 
 /** Minimal shape of a Multer file (avoids a hard @types/multer dependency). */
 interface UploadedCsv { buffer: Buffer; originalname?: string }
@@ -42,8 +46,42 @@ function csvCell(v: unknown): string {
 
 @Injectable()
 class ReportsExtendedService {
-  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService) {}
+  constructor(private readonly prisma: PrismaService, private readonly audit: AuditService, private readonly pdf: PdfService) {}
   private tid(t: string | null): string { if (!t) throw new ForbiddenException('A tenant context is required'); return t; }
+
+  /** Render a salary slip as a PDF (PRD §18). Self readable by owner, or anyone with payroll.read.tenant. */
+  async salarySlipPdf(user: AuthenticatedUser, id: string): Promise<{ buffer: Buffer; filename: string }> {
+    const t = this.tid(user.tenantId);
+    const slip = await this.prisma.salarySlip.findFirst({
+      where: { id, tenantId: t },
+      include: { payslip: { include: { components: true, run: { select: { periodLabel: true } }, employee: { select: { fullName: true, employeeNo: true, userId: true } } } } },
+    });
+    if (!slip) throw new NotFoundException('Salary slip not found');
+    const isOwner = slip.payslip.employee.userId === user.id;
+    const canReadTenant = user.permissions?.includes('payroll.read.tenant');
+    if (!isOwner && !canReadTenant) throw new ForbiddenException('You can only download your own salary slip');
+    const p = slip.payslip;
+    const buffer = await this.pdf.generate({
+      title: 'SLIP GAJI',
+      subtitle: p.run.periodLabel,
+      meta: [
+        ['Karyawan', `${p.employee.fullName} (${p.employee.employeeNo})`],
+        ['Periode', p.run.periodLabel],
+        ['Status', slip.status],
+      ],
+      table: {
+        columns: ['Komponen', 'Tipe', 'Jumlah'],
+        widths: [4, 2, 2],
+        rows: p.components.map((c) => [c.name, c.type, idrFmt(c.amount)]),
+      },
+      totals: [
+        ['Total Pendapatan', idrFmt(p.totalEarning)],
+        ['Total Potongan', idrFmt(p.totalDeduction)],
+        ['Gaji Bersih', idrFmt(p.netSalary)],
+      ],
+    });
+    return { buffer, filename: `slip-${p.employee.employeeNo}-${p.run.periodLabel}.pdf` };
+  }
 
   /**
    * Bulk-import employees from a CSV (PRD §18 employees/import). Header row must
@@ -153,6 +191,50 @@ class ReportsExtendedService {
     return slips.map((s) => ({ id: s.id, status: s.status, publishedAt: s.publishedAt, period: s.payslip.run.periodLabel, netSalary: s.payslip.netSalary, totalEarning: s.payslip.totalEarning, totalDeduction: s.payslip.totalDeduction }));
   }
 
+  /**
+   * Generic named-report runner (PRD §18 reports/:reportCode). Returns tabular
+   * { columns, rows } so the same payload renders as JSON or exports as CSV.
+   */
+  async runReport(tenant: string | null, code: string): Promise<{ code: string; columns: string[]; rows: Array<Array<string | number>>; generatedAt: string }> {
+    const t = this.tid(tenant);
+    let columns: string[] = [];
+    let rows: Array<Array<string | number>> = [];
+    switch (code) {
+      case 'employees': {
+        const emps = await this.prisma.employee.findMany({ where: { tenantId: t, deletedAt: null }, select: { employeeNo: true, fullName: true, status: true, employmentType: true }, orderBy: { employeeNo: 'asc' }, take: 10_000 });
+        columns = ['employeeNo', 'fullName', 'status', 'employmentType'];
+        rows = emps.map((e) => [e.employeeNo, e.fullName, e.status ?? '', e.employmentType ?? '']);
+        break;
+      }
+      case 'headcount-by-department': {
+        const [depts, counts] = await Promise.all([
+          this.prisma.department.findMany({ where: { tenantId: t, deletedAt: null }, select: { id: true, name: true } }),
+          this.prisma.employee.groupBy({ by: ['departmentId'], where: { tenantId: t, deletedAt: null }, _count: { _all: true } }),
+        ]);
+        const byId = new Map(counts.map((c) => [c.departmentId, c._count._all]));
+        columns = ['department', 'headcount'];
+        rows = depts.map((d) => [d.name, byId.get(d.id) ?? 0]);
+        rows.push(['(unassigned)', byId.get(null) ?? 0]);
+        break;
+      }
+      case 'active-placements': {
+        const pls = await this.prisma.placement.findMany({ where: { tenantId: t, deletedAt: null, status: 'active' }, include: { employee: { select: { fullName: true } }, client: { select: { name: true } } }, take: 10_000 });
+        columns = ['employee', 'client', 'position', 'startDate'];
+        rows = pls.map((p) => [p.employee?.fullName ?? '', p.client?.name ?? '', p.position ?? '', p.startDate ? p.startDate.toISOString().slice(0, 10) : '']);
+        break;
+      }
+      default:
+        throw new NotFoundException(`Unknown report code "${code}". Available: employees, headcount-by-department, active-placements`);
+    }
+    return { code, columns, rows, generatedAt: new Date().toISOString() };
+  }
+
+  /** Same report as CSV text (PRD §18 reports/:reportCode export). */
+  async runReportCsv(tenant: string | null, code: string): Promise<string> {
+    const { columns, rows } = await this.runReport(tenant, code);
+    return [columns.join(','), ...rows.map((r) => r.map(csvCell).join(','))].join('\n');
+  }
+
   /** CSV export of employees (non-sensitive columns only — PRD §0.10). */
   async employeesCsv(tenant: string | null): Promise<string> {
     const t = this.tid(tenant);
@@ -186,8 +268,24 @@ class ReportsExtendedController {
   @Get('reports/invoice-aging') @RequirePermissions('invoice.read.tenant') @ApiOperation({ summary: 'Outstanding invoice aging buckets' })
   invoiceAging(@CurrentTenant() t: string | null) { return this.s.invoiceAging(t); }
 
+  @Get('reports/:code/export') @RequirePermissions('report.read.tenant') @Header('Content-Type', 'text/csv; charset=utf-8') @ApiOperation({ summary: 'Run a named report and export as CSV' })
+  async reportCsv(@CurrentTenant() t: string | null, @Param('code') code: string, @Res({ passthrough: true }) res: Response): Promise<string> {
+    res.set({ 'Content-Disposition': `attachment; filename="${code}.csv"` });
+    return this.s.runReportCsv(t, code);
+  }
+
+  @Get('reports/:code') @RequirePermissions('report.read.tenant') @ApiOperation({ summary: 'Run a named report (employees | headcount-by-department | active-placements)' })
+  report(@CurrentTenant() t: string | null, @Param('code') code: string) { return this.s.runReport(t, code); }
+
   @Get('salary-slips/me') @RequirePermissions('payroll.read.own') @ApiOperation({ summary: 'My published salary slips (employee self-service)' })
   mySalarySlips(@CurrentUser() u: AuthenticatedUser) { return this.s.mySalarySlips(u); }
+
+  @Get('salary-slips/:id/pdf') @RequirePermissions('payroll.read.own') @ApiOperation({ summary: 'Download a salary slip as PDF (owner or payroll.read.tenant)' })
+  async slipPdf(@CurrentUser() u: AuthenticatedUser, @Param('id', ParseUUIDPipe) id: string, @Res({ passthrough: true }) res: Response): Promise<StreamableFile> {
+    const { buffer, filename } = await this.s.salarySlipPdf(u, id);
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${filename}"` });
+    return new StreamableFile(buffer);
+  }
 
   @Get('exports/employees') @RequirePermissions('employee.export.tenant') @Header('Content-Type', 'text/csv; charset=utf-8') @Header('Content-Disposition', 'attachment; filename="employees.csv"') @ApiOperation({ summary: 'Export employees as CSV' })
   employeesCsv(@CurrentTenant() t: string | null) { return this.s.employeesCsv(t); }

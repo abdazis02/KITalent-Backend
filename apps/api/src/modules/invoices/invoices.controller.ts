@@ -1,5 +1,6 @@
-import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, ParseUUIDPipe, Post, Query, Res, StreamableFile } from '@nestjs/common';
 import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import type { Response } from 'express';
 import { RequirePermissions } from '../../common/decorators/permissions.decorator';
 import { CurrentTenant } from '../../common/decorators/current-tenant.decorator';
 import { CurrentUser, type AuthenticatedUser } from '../../common/decorators/current-user.decorator';
@@ -27,6 +28,15 @@ export class InvoicesController {
   @ApiOperation({ summary: 'Get an invoice with items and payments' })
   findOne(@CurrentTenant() tenantId: string | null, @Param('id', ParseUUIDPipe) id: string) {
     return this.service.findOne(tenantId, id);
+  }
+
+  @Get(':id/pdf')
+  @RequirePermissions('invoice.read.tenant')
+  @ApiOperation({ summary: 'Download the invoice as a PDF' })
+  async pdf(@CurrentTenant() tenantId: string | null, @Param('id', ParseUUIDPipe) id: string, @Res({ passthrough: true }) res: Response): Promise<StreamableFile> {
+    const { buffer, filename } = await this.service.renderPdf(tenantId, id);
+    res.set({ 'Content-Type': 'application/pdf', 'Content-Disposition': `attachment; filename="${filename}"` });
+    return new StreamableFile(buffer);
   }
 
   @Post()

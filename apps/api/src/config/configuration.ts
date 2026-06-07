@@ -38,4 +38,29 @@ export default () => ({
     supportedLocales: (process.env.SUPPORTED_LOCALES ?? 'id-ID,en-US').split(','),
     defaultTheme: process.env.DEFAULT_THEME ?? 'system',
   },
+  // Outbound notification channels (PRD §10.28). Each is OFF until its creds are
+  // configured; the dispatcher logs intended deliveries until then.
+  channels: {
+    email: {
+      enabled: process.env.SMTP_HOST ? true : false,
+      host: process.env.SMTP_HOST,
+      port: parseInt(process.env.SMTP_PORT ?? '587', 10),
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+      from: process.env.SMTP_FROM ?? 'no-reply@kitalent.app',
+    },
+    whatsapp: {
+      enabled: process.env.WHATSAPP_API_URL ? true : false,
+      apiUrl: process.env.WHATSAPP_API_URL,
+      apiKey: process.env.WHATSAPP_API_KEY,
+    },
+    fcm: {
+      enabled: process.env.FCM_SERVER_KEY ? true : false,
+      serverKey: process.env.FCM_SERVER_KEY,
+    },
+  },
+  // Async job queue (PRD §25). Off unless explicitly enabled (requires Redis).
+  queue: {
+    enabled: process.env.QUEUE_ENABLED === 'true',
+  },
 });

@@ -6,6 +6,9 @@ export interface AuthenticatedUser {
   email: string;
   roles: string[];
   permissions: string[];
+  /** Access-token id + expiry (epoch seconds) — used for the logout denylist (PRD §22). */
+  jti?: string;
+  tokenExp?: number;
 }
 
 /** Injects the authenticated user (populated by JwtAuthGuard) into a handler. */

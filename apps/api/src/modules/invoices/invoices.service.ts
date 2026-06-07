@@ -4,8 +4,12 @@ import { buildMeta, normalizePagination, type Paginated } from '@kitalent/shared
 import { PrismaService } from '../../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 import { ApprovalService } from '../approval/approval.service';
+import { PdfService } from '../../common/pdf/pdf.service';
 import type { AuthenticatedUser } from '../../common/decorators/current-user.decorator';
 import type { PaginationQueryDto } from '../../common/dto/pagination-query.dto';
+
+/** Format whole-rupiah amounts as "Rp 1.234.567" (PRD §10.21 — amounts are integer IDR). */
+const idr = (n: number): string => `Rp ${Math.round(n).toLocaleString('id-ID')}`;
 import type { CreateInvoiceDto } from './dto/create-invoice.dto';
 import type { GenerateFromPayrollDto } from './dto/generate-from-payroll.dto';
 import type { RecordPaymentDto } from './dto/record-payment.dto';
@@ -24,7 +28,39 @@ export class InvoicesService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly approvals: ApprovalService,
+    private readonly pdf: PdfService,
   ) {}
+
+  /** Render an invoice as a PDF document (PRD §18 invoices/:id/pdf). */
+  async renderPdf(tenantId: string | null, id: string): Promise<{ buffer: Buffer; filename: string }> {
+    const invoice = await this.findOne(tenantId, id);
+    const outstanding = invoice.totalAmount - invoice.paidAmount;
+    const buffer = await this.pdf.generate({
+      title: 'INVOICE',
+      subtitle: invoice.invoiceNo,
+      meta: [
+        ['Klien', invoice.client?.name ?? '-'],
+        ['Tanggal Terbit', invoice.issueDate.toISOString().slice(0, 10)],
+        ['Jatuh Tempo', invoice.dueDate.toISOString().slice(0, 10)],
+        ['Status', invoice.status],
+        ...(invoice.periodLabel ? [['Periode', invoice.periodLabel] as [string, string]] : []),
+      ],
+      table: {
+        columns: ['Deskripsi', 'Qty', 'Harga', 'Jumlah'],
+        widths: [5, 1, 2, 2],
+        rows: invoice.items.map((it) => [it.description, it.quantity, idr(it.unitPrice), idr(it.amount)]),
+      },
+      totals: [
+        ['Subtotal', idr(invoice.subtotal)],
+        ['Pajak', idr(invoice.taxAmount)],
+        ['Diskon', `- ${idr(invoice.discountAmount)}`],
+        ['Total', idr(invoice.totalAmount)],
+        ['Dibayar', idr(invoice.paidAmount)],
+        ['Sisa', idr(outstanding)],
+      ],
+    });
+    return { buffer, filename: `${invoice.invoiceNo}.pdf` };
+  }
 
   private requireTenant(tenantId: string | null): string {
     if (!tenantId) throw new ForbiddenException('A tenant context is required');
