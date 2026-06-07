@@ -18,8 +18,8 @@
   --popover: 0 0% 100%;
   --popover-foreground: 221 39% 11%;
 
-  /* Brand / interactive */
-  --primary: 245 75% 59%;
+  /* Brand / interactive (KITalent blue, from the logo) */
+  --primary: 214 58% 40%;
   --primary-foreground: 0 0% 100%;
   --secondary: 220 16% 96%;
   --secondary-foreground: 217 19% 27%;
@@ -29,9 +29,16 @@
   --muted-foreground: 220 9% 46%;
 
   /* Lines & inputs */
-  --border: 220 14% 91%;
-  --input: 220 14% 91%;
-  --ring: 245 75% 59%;
+  --border: 220 16% 90%;
+  --input: 220 16% 90%;
+  --ring: 214 58% 40%;
+
+  /* Sidebar (deep navy — enterprise console) */
+  --sidebar: 215 41% 13%;
+  --sidebar-foreground: 215 18% 72%;
+  --sidebar-muted: 215 15% 52%;
+  --sidebar-accent: 214 60% 52%;
+  --sidebar-border: 215 30% 20%;
 
   /* Status / feedback (badges, toasts, charts) */
   --success: 142 71% 45%;
@@ -61,7 +68,7 @@
   --popover: 221 39% 11%;
   --popover-foreground: 220 16% 96%;
 
-  --primary: 243 86% 71%;
+  --primary: 214 70% 62%;
   --primary-foreground: 224 47% 7%;
   --secondary: 215 28% 17%;
   --secondary-foreground: 220 16% 96%;
@@ -72,7 +79,13 @@
 
   --border: 215 28% 17%;
   --input: 215 28% 17%;
-  --ring: 243 86% 71%;
+  --ring: 214 70% 62%;
+
+  --sidebar: 222 44% 9%;
+  --sidebar-foreground: 215 18% 70%;
+  --sidebar-muted: 215 15% 50%;
+  --sidebar-accent: 214 70% 60%;
+  --sidebar-border: 215 30% 18%;
 
   --success: 142 71% 45%;
   --success-foreground: 224 47% 7%;

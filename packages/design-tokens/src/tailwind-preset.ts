@@ -28,6 +28,13 @@ export const kitalentPreset: Partial<Config> = {
         border: hsl('border'),
         input: hsl('input'),
         ring: hsl('ring'),
+        sidebar: {
+          DEFAULT: hsl('sidebar'),
+          foreground: hsl('sidebar-foreground'),
+          muted: hsl('sidebar-muted'),
+          accent: hsl('sidebar-accent'),
+          border: hsl('sidebar-border'),
+        },
         chart: {
           1: hsl('chart-1'),
           2: hsl('chart-2'),

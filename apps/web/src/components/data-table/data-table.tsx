@@ -27,7 +27,7 @@ export function DataTable<T>({ table, columns, getRowId, searchPlaceholder, tool
   const t = useTranslations('common');
 
   return (
-    <div className="rounded-lg border border-border bg-card">
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       {/* Toolbar: debounced search + filters + manual refresh */}
       <div className="flex flex-wrap items-center gap-2 border-b border-border p-3">
         <input
@@ -61,7 +61,7 @@ export function DataTable<T>({ table, columns, getRowId, searchPlaceholder, tool
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border text-left text-muted-foreground">
+            <tr className="border-b border-border bg-muted/40 text-left text-xs uppercase tracking-wide text-muted-foreground">
               {columns.map((col) => (
                 <th key={col.key} className={`px-4 py-3 font-medium ${col.className ?? ''}`}>
                   {col.sortable ? (
