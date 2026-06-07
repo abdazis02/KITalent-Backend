@@ -97,7 +97,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           <div className="text-[10px] text-sidebar-muted">By Kamunara</div>
         </div>
       </div>
-      <nav className="flex-1 space-y-5 overflow-y-auto px-3 pb-6">
+      <nav className="scrollbar-none flex-1 space-y-5 overflow-y-auto px-3 pb-6">
         {NAV_GROUPS.map((grp) => (
           <div key={grp.group} className="space-y-1">
             <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-muted">{grp.group}</div>
