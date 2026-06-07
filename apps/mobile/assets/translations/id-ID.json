@@ -2,17 +2,56 @@
   "common": {
     "appName": "KITalent",
     "save": "Simpan",
-    "cancel": "Batal"
+    "cancel": "Batal",
+    "search": "Cari",
+    "noData": "Belum ada data",
+    "loadError": "Gagal memuat data",
+    "retry": "Coba lagi",
+    "actionFailed": "Tindakan gagal",
+    "loading": "Memuat…"
   },
   "auth": {
     "signIn": "Masuk",
+    "signOut": "Keluar",
     "email": "Email",
     "password": "Kata Sandi",
-    "signInTitle": "Masuk ke KITalent"
+    "signInTitle": "Masuk ke KITalent",
+    "tenantId": "ID Tenant",
+    "tenantHint": "Kosongkan jika akun platform",
+    "loginFailed": "Email atau kata sandi salah",
+    "invalidEmail": "Masukkan email yang valid",
+    "passwordRequired": "Kata sandi wajib diisi"
+  },
+  "nav": {
+    "home": "Beranda",
+    "attendance": "Absensi",
+    "leaves": "Cuti",
+    "approvals": "Persetujuan",
+    "profile": "Profil",
+    "payslips": "Slip Gaji"
+  },
+  "home": {
+    "greeting": "Selamat datang,",
+    "quickActions": "Aksi Cepat"
+  },
+  "leaves": {
+    "days": "{} hari"
+  },
+  "approvals": {
+    "empty": "Tidak ada persetujuan menunggu",
+    "step": "Langkah: {}",
+    "approve": "Setujui",
+    "reject": "Tolak",
+    "approved": "Pengajuan disetujui",
+    "rejected": "Pengajuan ditolak"
   },
   "attendance": {
     "checkIn": "Absen Masuk",
-    "checkOut": "Absen Pulang"
+    "checkOut": "Absen Pulang",
+    "checkedIn": "Berhasil absen masuk",
+    "checkedOut": "Berhasil absen pulang",
+    "hint": "Pastikan lokasi aktif untuk validasi geofence.",
+    "noProfile": "Akun Anda belum terhubung ke data karyawan"
   },
   "settings": {
     "appearance": "Tampilan",

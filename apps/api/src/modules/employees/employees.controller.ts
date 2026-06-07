@@ -20,6 +20,13 @@ export class EmployeesController {
     return this.service.list(user, query);
   }
 
+  @Get('me')
+  @RequirePermissions('employee.read.own')
+  @ApiOperation({ summary: 'My linked employee profile (mobile self-service)' })
+  myProfile(@CurrentUser() user: AuthenticatedUser) {
+    return this.service.myProfile(user);
+  }
+
   @Get(':id')
   @RequirePermissions('employee.read.tenant')
   @ApiOperation({ summary: 'Get an employee by id (sensitive fields masked without employee.read.sensitive)' })

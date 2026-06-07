@@ -2,17 +2,56 @@
   "common": {
     "appName": "KITalent",
     "save": "Save",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "search": "Search",
+    "noData": "No data yet",
+    "loadError": "Failed to load data",
+    "retry": "Retry",
+    "actionFailed": "Action failed",
+    "loading": "Loading…"
   },
   "auth": {
-    "signIn": "Sign In",
+    "signIn": "Sign in",
+    "signOut": "Sign out",
     "email": "Email",
     "password": "Password",
-    "signInTitle": "Sign in to KITalent"
+    "signInTitle": "Sign in to KITalent",
+    "tenantId": "Tenant ID",
+    "tenantHint": "Leave empty for a platform account",
+    "loginFailed": "Invalid email or password",
+    "invalidEmail": "Enter a valid email",
+    "passwordRequired": "Password is required"
+  },
+  "nav": {
+    "home": "Home",
+    "attendance": "Attendance",
+    "leaves": "Leave",
+    "approvals": "Approvals",
+    "profile": "Profile",
+    "payslips": "Payslips"
+  },
+  "home": {
+    "greeting": "Welcome,",
+    "quickActions": "Quick Actions"
+  },
+  "leaves": {
+    "days": "{} day(s)"
+  },
+  "approvals": {
+    "empty": "No pending approvals",
+    "step": "Step: {}",
+    "approve": "Approve",
+    "reject": "Reject",
+    "approved": "Request approved",
+    "rejected": "Request rejected"
   },
   "attendance": {
-    "checkIn": "Check In",
-    "checkOut": "Check Out"
+    "checkIn": "Check in",
+    "checkOut": "Check out",
+    "checkedIn": "Checked in successfully",
+    "checkedOut": "Checked out successfully",
+    "hint": "Make sure location is on for geofence validation.",
+    "noProfile": "Your account is not linked to an employee record"
   },
   "settings": {
     "appearance": "Appearance",

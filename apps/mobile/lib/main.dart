@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'core/router/app_router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_controller.dart';
 
@@ -33,8 +34,9 @@ class KITalentApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeControllerProvider);
+    final router = ref.watch(routerProvider);
 
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'KITalent',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.light,
@@ -43,37 +45,7 @@ class KITalentApp extends ConsumerWidget {
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,
       locale: context.locale,
-      home: const _LoginScreen(),
-    );
-  }
-}
-
-/// Placeholder login screen demonstrating tokens + i18n wired end-to-end.
-class _LoginScreen extends StatelessWidget {
-  const _LoginScreen();
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                'auth.signInTitle'.tr(),
-                style: Theme.of(context).textTheme.headlineSmall,
-              ),
-              const SizedBox(height: 24),
-              FilledButton(
-                onPressed: () {},
-                child: Text('auth.signIn'.tr()),
-              ),
-            ],
-          ),
-        ),
-      ),
+      routerConfig: router,
     );
   }
 }

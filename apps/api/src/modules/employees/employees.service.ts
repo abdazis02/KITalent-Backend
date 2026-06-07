@@ -100,6 +100,16 @@ export class EmployeesService {
     return this.mask(user, employee);
   }
 
+  /** The employee profile linked to the caller's user account (PRD §10.30 self-service). */
+  async myProfile(user: AuthenticatedUser) {
+    const tid = this.requireTenant(user.tenantId);
+    const employee = await this.prisma.employee.findFirst({
+      where: { userId: user.id, tenantId: tid, deletedAt: null },
+    });
+    if (!employee) throw new NotFoundException('No employee profile is linked to your account');
+    return this.mask(user, employee);
+  }
+
   /** ISO date strings → Date for @db.Date columns; cast enums. */
   private coerced(dto: CreateEmployeeDto | UpdateEmployeeDto) {
     return {
